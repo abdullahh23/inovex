@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Package, FileText, UserCheck } from 'lucide-react';
+import { Users, Package, FileText, UserCheck, RefreshCw } from 'lucide-react';
 import { fetchAdminStats } from '../../lib/invoices';
 
 function StatCard({ label, value, icon: Icon, delay }: { label: string; value: number; icon: typeof Users; delay: number }) {
@@ -8,15 +8,15 @@ function StatCard({ label, value, icon: Icon, delay }: { label: string; value: n
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.3 }}
-      className="bg-white rounded-2xl shadow-panel p-6 flex items-start gap-4"
+      transition={{ delay, duration: 0.35 }}
+      className="bg-white border border-steel/10 rounded-2xl p-6 shadow-card hover:shadow-panel transition-all duration-300 flex items-start gap-4"
     >
-      <div className="w-11 h-11 bg-lane rounded-xl flex items-center justify-center">
-        <Icon size={20} className="text-signal" />
+      <div className="w-12 h-12 bg-lane border border-steel/5 rounded-xl flex items-center justify-center text-signal shrink-0 shadow-xxs">
+        <Icon size={22} />
       </div>
       <div>
-        <div className="text-xs text-steel uppercase tracking-wide">{label}</div>
-        <div className="text-3xl font-bold text-ink mt-1">{value.toLocaleString()}</div>
+        <div className="text-xxs font-bold text-steel uppercase tracking-widest">{label}</div>
+        <div className="text-3xl font-extrabold text-ink mt-1">{value.toLocaleString()}</div>
       </div>
     </motion.div>
   );
@@ -26,28 +26,43 @@ export function AdminDashboardPage() {
   const [stats, setStats] = useState({ totalUsers: 0, activeUsers: 0, totalLoads: 0, totalInvoices: 0 });
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const loadStats = () => {
+    setLoading(true);
     fetchAdminStats()
       .then(setStats)
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadStats();
   }, []);
 
-  if (loading) {
-    return <div className="text-steel text-sm">Loading statistics…</div>;
-  }
-
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-ink">Admin Dashboard</h1>
-        <p className="text-steel text-sm mt-1">Platform overview and statistics</p>
+    <div className="space-y-6 animate-fade-in">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-extrabold text-ink font-outfit">Admin Dashboard</h1>
+          <p className="text-steel text-sm mt-0.5">Platform overview and user statistics</p>
+        </div>
+        <button
+          onClick={loadStats}
+          className="p-2 text-steel hover:text-signal hover:bg-lane rounded-xl transition-all"
+          title="Refresh statistics"
+        >
+          <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
+        </button>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
-        <StatCard label="Total Users" value={stats.totalUsers} icon={Users} delay={0} />
-        <StatCard label="Active Users" value={stats.activeUsers} icon={UserCheck} delay={0.05} />
-        <StatCard label="Total Loads" value={stats.totalLoads} icon={Package} delay={0.1} />
-        <StatCard label="Total Invoices" value={stats.totalInvoices} icon={FileText} delay={0.15} />
-      </div>
+
+      {loading ? (
+        <div className="p-12 text-center text-steel text-xs font-semibold">Loading platform statistics...</div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <StatCard label="Total Registrations" value={stats.totalUsers} icon={Users} delay={0} />
+          <StatCard label="Active Accounts" value={stats.activeUsers} icon={UserCheck} delay={0.05} />
+          <StatCard label="Weekly Loads" value={stats.totalLoads} icon={Package} delay={0.1} />
+          <StatCard label="Total Invoices" value={stats.totalInvoices} icon={FileText} delay={0.15} />
+        </div>
+      )}
     </div>
   );
 }

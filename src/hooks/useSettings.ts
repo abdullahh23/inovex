@@ -13,6 +13,7 @@ const defaultCompany: CompanySettings = {
   payoneer: '',
   bankInformation: '',
   dispatchPercentage: 10,
+  templateId: 'classic',
 };
 
 const defaultCarrier: CarrierSettings = {

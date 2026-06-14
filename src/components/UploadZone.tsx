@@ -19,7 +19,7 @@ export function UploadZone({ onLoadExtracted }: UploadZoneProps) {
   const processFile = useCallback(async (file: File) => {
     const allowed = ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'];
     if (!allowed.includes(file.type)) {
-      setError('Please upload a PDF, JPG, or PNG file.');
+      setError('Please upload a PDF or an image file (JPG, PNG, WEBP).');
       return;
     }
     setError(null);
@@ -29,7 +29,7 @@ export function UploadZone({ onLoadExtracted }: UploadZoneProps) {
     try {
       const result = await extractRateConfirmation(file);
       if (!result.success || !result.data) {
-        setError(result.error || 'Extraction failed. Please try again.');
+        setError(result.error || 'Extraction failed. Make sure the file is a clear rate confirmation document.');
         setLoading(false);
         return;
       }
@@ -47,7 +47,7 @@ export function UploadZone({ onLoadExtracted }: UploadZoneProps) {
       };
       onLoadExtracted(load);
     } catch {
-      setError('Network error. Check your connection and try again.');
+      setError('Network error. Check your connection or server configurations.');
     } finally {
       setLoading(false);
       if (inputRef.current) inputRef.current.value = '';
@@ -62,11 +62,13 @@ export function UploadZone({ onLoadExtracted }: UploadZoneProps) {
   }, [processFile]);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div
-        className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
-          dragging ? 'border-signal bg-signal/5' : 'border-steel/30 hover:border-signal/60 hover:bg-lane/60'
-        } ${loading ? 'pointer-events-none opacity-60' : ''}`}
+        className={`border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-all duration-300 relative overflow-hidden ${
+          dragging
+            ? 'border-signal bg-signal/5 ring-4 ring-signal/15 scale-[0.99]'
+            : 'border-steel/20 hover:border-signal/50 hover:bg-lane bg-white/50'
+        } ${loading ? 'pointer-events-none opacity-70' : ''}`}
         onClick={() => !loading && inputRef.current?.click()}
         onDragOver={e => { e.preventDefault(); setDragging(true); }}
         onDragLeave={() => setDragging(false)}
@@ -80,28 +82,44 @@ export function UploadZone({ onLoadExtracted }: UploadZoneProps) {
           onChange={e => { const f = e.target.files?.[0]; if (f) processFile(f); }}
         />
         {loading ? (
-          <div className="flex flex-col items-center gap-3 text-signal">
-            <Loader2 size={32} className="animate-spin" />
+          <div className="flex flex-col items-center gap-4 py-4">
+            <div className="relative flex items-center justify-center">
+              <div className="absolute w-12 h-12 rounded-full border-4 border-signal/20 animate-pulse" />
+              <Loader2 size={32} className="text-signal animate-spin relative z-10" />
+            </div>
             <div>
-              <div className="font-semibold">Extracting load data…</div>
-              {lastFile && <div className="text-sm text-steel mt-1">{lastFile}</div>}
+              <div className="font-bold text-ink text-sm">Processing Confirmation Document...</div>
+              <div className="text-xs text-steel mt-1 font-medium truncate max-w-xs mx-auto">
+                Analyzing layout & extracting fields
+              </div>
+              {lastFile && <div className="text-[11px] text-steel/70 italic mt-1">{lastFile}</div>}
             </div>
           </div>
         ) : (
-          <div className="flex flex-col items-center gap-3 text-steel">
-            <Upload size={32} className="text-signal/70" />
-            <div>
-              <div className="font-semibold text-ink">Drop Rate Confirmation here</div>
-              <div className="text-sm mt-1">PDF, JPG, or PNG · Click or drag & drop</div>
+          <div className="flex flex-col items-center gap-4 py-2">
+            <div className="w-12 h-12 rounded-2xl bg-signal/5 border border-signal/15 flex items-center justify-center text-signal shadow-sm">
+              <Upload size={22} />
             </div>
+            <div>
+              <div className="font-bold text-ink text-sm">Drop Rate Confirmation here</div>
+              <div className="text-xs text-steel mt-1.5 font-medium">
+                Supports PDF, JPG, PNG, or WEBP files up to 20MB
+              </div>
+            </div>
+            <button
+              type="button"
+              className="text-xs font-semibold bg-white border border-steel/15 text-ink hover:border-signal hover:text-signal shadow-sm px-4 py-2 rounded-xl transition-all"
+            >
+              Select File
+            </button>
           </div>
         )}
       </div>
 
       {error && (
-        <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-          <AlertCircle size={16} className="mt-0.5 shrink-0" />
-          <span>{error}</span>
+        <div className="flex items-start gap-3 p-4 bg-red-50/50 border border-red-200/60 rounded-2xl text-red-700 text-xs font-semibold shadow-sm animate-fade-in">
+          <AlertCircle size={16} className="shrink-0 text-red-600" />
+          <div className="flex-1">{error}</div>
         </div>
       )}
     </div>

@@ -9,12 +9,12 @@ import { printInvoice } from '../lib/pdf';
 export function InvoiceRoute() {
   const { user } = useAuth();
   const { loads } = useAppLoads();
-  const { company, carrier } = useAppSettings();
+  const { company, carrier, saveCompany } = useAppSettings();
 
   const invoiceNumber = useMemo(() => generateInvoiceNumber(), []);
   const invoiceDate = useMemo(() => {
     const d = new Date();
-    return `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getDate()).padStart(2, '0')}/${d.getFullYear()}`;
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }, []);
   const weekLabel = useMemo(() => getCurrentWeekLabel(), []);
 
@@ -29,6 +29,10 @@ export function InvoiceRoute() {
     printInvoice();
   };
 
+  const handleTemplateChange = async (templateId: string) => {
+    await saveCompany({ ...company, templateId });
+  };
+
   return (
     <InvoicePage
       loads={loads}
@@ -38,6 +42,7 @@ export function InvoiceRoute() {
       invoiceDate={invoiceDate}
       weekLabel={weekLabel}
       onPrint={handlePrint}
+      onTemplateChange={handleTemplateChange}
     />
   );
 }

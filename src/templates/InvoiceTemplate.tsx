@@ -1,5 +1,8 @@
 import type { Load, CompanySettings, CarrierSettings } from '../types';
-import { calcTotals, formatCurrency } from '../lib/calc';
+import { calcTotals, formatCurrency, formatDate } from '../lib/calc';
+import { MinimalTemplate } from './MinimalTemplate';
+import { ExecutiveTemplate } from './ExecutiveTemplate';
+import { TechTemplate } from './TechTemplate';
 
 interface InvoiceTemplateProps {
   loads: Load[];
@@ -10,15 +13,15 @@ interface InvoiceTemplateProps {
   weekLabel: string;
 }
 
-// Colors from the template image
+// Colors from the original Classic template
 const NAVY = '#1e2d4a';
-const NAVY_LIGHT = '#f0f3f8';   // alternating row tint
+const NAVY_LIGHT = '#f0f3f8';
 const GOLD = '#c9a84c';
 const GRAY_LABEL = '#6b7a8d';
 const BORDER = '#d8dde6';
 const TEXT = '#1e2d4a';
 
-export function InvoiceTemplate({
+function ClassicTemplate({
   loads,
   company,
   carrier,
@@ -27,11 +30,8 @@ export function InvoiceTemplate({
   weekLabel,
 }: InvoiceTemplateProps) {
   const { totalGrossRevenue, dispatchFee } = calcTotals(loads, company.dispatchPercentage);
-
-  // Build "W/E DATE" label from weekLabel string
   const weLabel = weekLabel.replace('Week of ', 'W/E ').split('–')[1]?.trim() ?? weekLabel;
 
-  // Payment method label for the payment box
   const paymentMethod = company.zelle
     ? `Payment via Zelle: ${company.zelle}`
     : company.payoneer
@@ -44,6 +44,8 @@ export function InvoiceTemplate({
     <div
       id="invoice-root"
       style={{
+        WebkitPrintColorAdjust: 'exact',
+        printColorAdjust: 'exact',
         fontFamily: "'Helvetica Neue', 'Arial', sans-serif",
         fontSize: '13px',
         color: TEXT,
@@ -56,7 +58,6 @@ export function InvoiceTemplate({
     >
       {/* ── HEADER ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0' }}>
-        {/* Title */}
         <div style={{ fontSize: '28px', fontWeight: '900', color: NAVY, letterSpacing: '0.5px', lineHeight: 1.1 }}>
           DISPATCH FEE INVOICE
         </div>
@@ -70,11 +71,11 @@ export function InvoiceTemplate({
             </tr>
             <tr>
               <td style={{ color: GRAY_LABEL, paddingRight: '20px', paddingBottom: '4px' }}>Invoice Date</td>
-              <td style={{ fontWeight: '700', color: NAVY, paddingBottom: '4px', textAlign: 'right' }}>{invoiceDate}</td>
+              <td style={{ fontWeight: '700', color: NAVY, paddingBottom: '4px', textAlign: 'right' }}>{formatDate(invoiceDate)}</td>
             </tr>
             <tr>
               <td style={{ color: GRAY_LABEL, paddingRight: '20px' }}>Due Date</td>
-              <td style={{ fontWeight: '700', color: NAVY, textAlign: 'right' }}>{invoiceDate}</td>
+              <td style={{ fontWeight: '700', color: NAVY, textAlign: 'right' }}>{formatDate(invoiceDate)}</td>
             </tr>
           </tbody>
         </table>
@@ -185,19 +186,17 @@ export function InvoiceTemplate({
           INVOICE SUMMARY
         </div>
 
-        {/* Row 1: Total Weekly Gross */}
         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: `1px solid ${BORDER}` }}>
           <span style={{ color: '#3d4f63' }}>Total Weekly Gross ({loads.length} {loads.length === 1 ? 'Load' : 'Loads'})</span>
           <span style={{ fontWeight: '600', color: NAVY }}>{formatCurrency(totalGrossRevenue)}</span>
         </div>
 
-        {/* Row 2: Dispatch Fee */}
         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: `1px solid ${BORDER}` }}>
           <span style={{ color: '#3d4f63' }}>Dispatch Fee @ {company.dispatchPercentage}%</span>
           <span style={{ fontWeight: '600', color: NAVY }}>{formatCurrency(dispatchFee)}</span>
         </div>
 
-        {/* TOTAL DUE bar — navy with gold amount */}
+        {/* TOTAL DUE bar */}
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
@@ -244,4 +243,20 @@ export function InvoiceTemplate({
       )}
     </div>
   );
+}
+
+export function InvoiceTemplate(props: InvoiceTemplateProps) {
+  const templateId = props.company.templateId || 'classic';
+
+  switch (templateId) {
+    case 'modern':
+      return <MinimalTemplate {...props} />;
+    case 'cargo':
+      return <ExecutiveTemplate {...props} />;
+    case 'teal':
+      return <TechTemplate {...props} />;
+    case 'classic':
+    default:
+      return <ClassicTemplate {...props} />;
+  }
 }

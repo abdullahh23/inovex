@@ -25,6 +25,7 @@ export function rowToLoad(row: LoadRow): Load {
     originState: row.origin_state,
     destinationCity: row.destination_city,
     destinationState: row.destination_state,
+    source: row.source as 'extract' | 'manual',
   };
 }
 

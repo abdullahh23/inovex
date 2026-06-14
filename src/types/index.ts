@@ -8,6 +8,7 @@ export interface Load {
   originState: string;
   destinationCity: string;
   destinationState: string;
+  source?: 'extract' | 'manual';
 }
 
 export interface CompanySettings {
@@ -20,6 +21,7 @@ export interface CompanySettings {
   payoneer: string;
   bankInformation: string;
   dispatchPercentage: number;
+  templateId?: string;
 }
 
 export interface CarrierSettings {

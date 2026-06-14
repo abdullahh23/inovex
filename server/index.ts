@@ -44,7 +44,37 @@ async function requireAuth(req: express.Request, res: express.Response, next: ex
   next();
 }
 
-app.post('/api/extract', requireAuth, upload.single('file'), async (req, res) => {
+interface RateLimitInfo {
+  count: number;
+  resetTime: number;
+}
+const rateLimits = new Map<string, RateLimitInfo>();
+const LIMIT_WINDOW_MS = 60 * 60 * 1000;
+const MAX_REQUESTS = 60;
+
+function rateLimiter(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const ip = req.ip || req.headers['x-forwarded-for']?.toString() || 'unknown';
+  const now = Date.now();
+
+  let info = rateLimits.get(ip);
+  if (!info || now > info.resetTime) {
+    info = {
+      count: 0,
+      resetTime: now + LIMIT_WINDOW_MS,
+    };
+  }
+
+  if (info.count >= MAX_REQUESTS) {
+    res.status(429).json({ success: false, error: 'Too many extraction requests. Please wait and try again later.' });
+    return;
+  }
+
+  info.count++;
+  rateLimits.set(ip, info);
+  next();
+}
+
+app.post('/api/extract', requireAuth, rateLimiter, upload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       res.status(400).json({ success: false, error: 'No file uploaded' });

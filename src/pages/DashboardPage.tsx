@@ -1,4 +1,4 @@
-import { CheckCircle, Plus } from 'lucide-react';
+import { CheckCircle, Plus, AlertTriangle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { UploadZone } from '../components/UploadZone';
 import { LoadTable } from '../components/LoadTable';
@@ -44,21 +44,27 @@ export function DashboardPage({
   };
 
   return (
-    <div className="space-y-6">
-      <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="text-2xl font-bold text-ink">Weekly Loads</h1>
-        <p className="text-steel text-sm mt-1">Upload rate confirmations to auto-extract and add loads.</p>
-      </motion.div>
+    <div className="space-y-6 animate-fade-in">
+      {/* Title Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-extrabold text-ink tracking-tight font-outfit">Weekly Loads</h1>
+          <p className="text-steel text-sm mt-0.5 font-medium">Upload rate confirmations to auto-extract and add loads.</p>
+        </div>
+      </div>
 
+      {/* Warnings & Alerts */}
       {!company.companyName && (
-        <div className="bg-amberline/10 border border-amberline/30 text-amberline rounded-xl px-4 py-3 text-sm">
-          ⚠️ Complete your company settings before exporting invoices.
+        <div className="bg-amberline/5 border border-amberline/20 text-amberline rounded-2xl p-4 text-xs font-semibold flex items-center gap-2.5 shadow-card">
+          <AlertTriangle size={16} className="shrink-0" />
+          <span>Complete your company settings before exporting invoices.</span>
         </div>
       )}
 
       {!carrier.carrierName && (
-        <div className="bg-amberline/10 border border-amberline/30 text-amberline rounded-xl px-4 py-3 text-sm">
-          ⚠️ Carrier information is not set. Go to Settings to add carrier details.
+        <div className="bg-amberline/5 border border-amberline/20 text-amberline rounded-2xl p-4 text-xs font-semibold flex items-center gap-2.5 shadow-card">
+          <AlertTriangle size={16} className="shrink-0" />
+          <span>Carrier information is not set. Go to Settings to add carrier details.</span>
         </div>
       )}
 
@@ -66,31 +72,28 @@ export function DashboardPage({
         <motion.div
           initial={{ opacity: 0, y: -4 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-2 bg-signal/10 border border-signal/30 text-signal rounded-xl px-4 py-3 text-sm font-medium"
+          className="flex items-center gap-2.5 bg-teal-50 border border-teal-200 text-teal-700 rounded-2xl p-4 text-xs font-semibold shadow-card"
         >
-          <CheckCircle size={16} />
+          <CheckCircle size={16} className="shrink-0 text-teal-600" />
           <span>Load "{lastAdded}" added successfully!</span>
         </motion.div>
       )}
 
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.05 }}
-        className="bg-white rounded-2xl shadow-panel p-6"
-      >
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-bold text-ink">Upload Rate Confirmation</h2>
+      {/* Upload Block */}
+      <div className="bg-white rounded-2xl shadow-panel border border-steel/10 p-6 space-y-4">
+        <div className="flex items-center justify-between border-b border-steel/5 pb-4">
+          <h2 className="text-sm font-bold text-ink uppercase tracking-wider">Upload Rate Confirmation</h2>
           <button
             onClick={() => setManualOpen(true)}
-            className="flex items-center gap-1.5 text-sm font-semibold text-signal hover:bg-signal/10 px-3 py-1.5 rounded-lg transition-colors"
+            className="flex items-center gap-1.5 text-xs font-bold text-signal bg-signal/5 border border-signal/15 hover:bg-signal hover:text-white px-3.5 py-2 rounded-xl transition-all"
           >
-            <Plus size={16} /> Manual Load Entry
+            <Plus size={14} /> Manual Load Entry
           </button>
         </div>
         <UploadZone onLoadExtracted={handleExtracted} />
-      </motion.div>
+      </div>
 
+      {/* Stats Cards */}
       <TotalsBar
         totalGrossRevenue={totalGrossRevenue}
         dispatchFee={dispatchFee}
@@ -98,26 +101,23 @@ export function DashboardPage({
         loadCount={loads.length}
       />
 
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="bg-white rounded-2xl shadow-panel p-6"
-      >
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-bold text-ink">Loads ({loads.length})</h2>
+      {/* Table Section */}
+      <div className="bg-white rounded-2xl shadow-panel border border-steel/10 p-6 space-y-4">
+        <div className="flex items-center justify-between border-b border-steel/5 pb-4">
+          <h2 className="text-sm font-bold text-ink uppercase tracking-wider">Weekly Load Log ({loads.length})</h2>
           {loads.length > 0 && (
             <button
-              onClick={() => { if (confirm('Clear all loads?')) onClearLoads(); }}
-              className="text-xs text-steel hover:text-red-500 transition-colors"
+              onClick={() => { if (confirm('Are you sure you want to clear all active loads?')) onClearLoads(); }}
+              className="text-xs font-bold text-steel hover:text-red-500 transition-colors"
             >
-              Clear All
+              Clear Log
             </button>
           )}
         </div>
         <LoadTable loads={loads} onRemove={onRemoveLoad} />
-      </motion.div>
+      </div>
 
+      {/* Manual Entry Modal */}
       <ManualLoadModal open={manualOpen} onClose={() => setManualOpen(false)} onSubmit={handleManual} />
     </div>
   );
