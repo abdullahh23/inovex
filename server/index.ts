@@ -5,7 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
 import 'dotenv/config';
-import { extractWithGemini } from './gemini.js';
+import { extractFromFile, validateFile } from './ai/extraction.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -81,13 +81,22 @@ app.post('/api/extract', requireAuth, rateLimiter, upload.single('file'), async 
       return;
     }
 
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      res.status(500).json({ success: false, error: 'Gemini API key not configured on server' });
+    // File validation
+    const fileError = validateFile(req.file.mimetype, req.file.size);
+    if (fileError) {
+      res.status(400).json({ success: false, error: fileError });
       return;
     }
 
-    const mock = process.env.GEMINI_MOCK === 'true';
+    const apiKey = process.env.OPENROUTER_API_KEY;
+    if (!apiKey) {
+      res.status(500).json({ success: false, error: 'OpenRouter API key not configured on server' });
+      return;
+    }
+
+    const model = process.env.OPENROUTER_MODEL || 'openrouter/free';
+
+    const mock = process.env.AI_MOCK === 'true';
     if (mock) {
       res.json({
         success: true,
@@ -105,10 +114,12 @@ app.post('/api/extract', requireAuth, rateLimiter, upload.single('file'), async 
       return;
     }
 
-    const result = await extractWithGemini(req.file.buffer, req.file.mimetype, apiKey);
+    console.log(`[Extract] Processing ${req.file.originalname} (${req.file.mimetype}, ${(req.file.size / 1024).toFixed(1)}KB)`);
+    const result = await extractFromFile(req.file.buffer, req.file.mimetype, apiKey, model);
     res.json(result);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : 'Extraction failed';
+    console.error('[Extract] Error:', message);
     res.status(500).json({ success: false, error: message });
   }
 });
