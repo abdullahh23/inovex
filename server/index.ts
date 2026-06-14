@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import multer from 'multer';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
 import 'dotenv/config';
@@ -11,11 +12,11 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 const PORT = process.env.PORT || 8787;
-const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || 'http://localhost:5173';
+const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || '*';
 const SUPABASE_URL = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 
-app.use(cors({ origin: CLIENT_ORIGIN, credentials: true }));
+app.use(cors({ origin: CLIENT_ORIGIN === '*' ? true : CLIENT_ORIGIN, credentials: true }));
 app.use(express.json());
 
 const upload = multer({
@@ -125,10 +126,14 @@ app.post('/api/extract', requireAuth, rateLimiter, upload.single('file'), async 
 });
 
 // Serve built frontend in production
-const distPath = path.join(__dirname, '../../dist');
-app.use(express.static(distPath));
+// In production: dist-server/server/index.js -> ../../dist
+// In dev with tsx: server/index.ts -> ../dist (not used)
+const distPath = path.resolve(__dirname, '..', 'dist');
+const distPath2 = path.resolve(__dirname, '..', '..', 'dist');
+const finalDistPath = fs.existsSync(distPath) ? distPath : distPath2;
+app.use(express.static(finalDistPath));
 app.get('/{*path}', (_req, res) => {
-  res.sendFile(path.join(distPath, 'index.html'));
+  res.sendFile(path.join(finalDistPath, 'index.html'));
 });
 
 app.listen(PORT, () => {
