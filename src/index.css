@@ -39,22 +39,41 @@
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     background: #ffffff !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
-  aside {
+  /* Hide everything that is not the invoice */
+  .no-print,
+  aside,
+  nav,
+  header,
+  footer,
+  button,
+  select {
     display: none !important;
   }
 
-  main {
+  /* Reset layout wrappers so invoice fills the page */
+  main,
+  main > div,
+  .space-y-6 {
     max-width: 100% !important;
+    width: 100% !important;
     padding: 0 !important;
     margin: 0 !important;
   }
 
-  #invoice-root {
-    width: 100% !important;
-    padding: 20px !important;
+  /* Remove decorative wrappers around the invoice */
+  .shadow-panel,
+  .shadow-lg,
+  .rounded-2xl,
+  .rounded-sm {
     box-shadow: none !important;
     border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
   }
 }

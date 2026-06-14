@@ -53,9 +53,6 @@ export function ExecutiveTemplate({
           <div style={{ fontSize: '24px', fontWeight: '800', letterSpacing: '1px', textTransform: 'uppercase', color: '#ecc94b' }}>
             {company.companyName || 'DISPATCH LOGISTICS'}
           </div>
-          <div style={{ color: '#a0aec0', marginTop: '4px', textTransform: 'uppercase', fontSize: '11px', fontWeight: '600', letterSpacing: '2px' }}>
-            Professional Dispatch Invoice
-          </div>
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontSize: '12px', color: '#a0aec0' }}>INVOICE NUMBER</div>
