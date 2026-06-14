@@ -41,10 +41,6 @@ export async function extractFromFile(
 ): Promise<ExtractionResponse> {
   const base64Data = fileBuffer.toString('base64');
   
-  // For PDFs, we send as image/png with a note that it's a PDF document
-  // Many free models don't support application/pdf but do support images
-  // We also try with the original mime type first for models that support it
-  const isPdf = mimeType === 'application/pdf';
   const dataUrl = `data:${mimeType};base64,${base64Data}`;
 
   const messages = [
@@ -54,23 +50,16 @@ export async function extractFromFile(
     },
     {
       role: 'user' as const,
-      content: isPdf
-        ? [
-            {
-              type: 'text' as const,
-              text: `This is a trucking rate confirmation PDF document encoded in base64. Extract the load details and return JSON only.\n\nBase64 PDF content (first 2000 chars for reference): ${base64Data.slice(0, 2000)}`,
-            },
-          ]
-        : [
-            {
-              type: 'text' as const,
-              text: 'Extract the load details from this rate confirmation document. Return JSON only.',
-            },
-            {
-              type: 'image_url' as const,
-              image_url: { url: dataUrl },
-            },
-          ],
+      content: [
+        {
+          type: 'text' as const,
+          text: 'Extract the load details from this rate confirmation document. Return JSON only.',
+        },
+        {
+          type: 'image_url' as const,
+          image_url: { url: dataUrl },
+        },
+      ],
     },
   ];
 
@@ -89,6 +78,11 @@ export async function extractFromFile(
     parsed = JSON.parse(jsonStr);
   } catch {
     throw new Error(`Failed to parse AI response as JSON: ${rawText.slice(0, 300)}`);
+  }
+
+  // Convert nulls to undefined (free models return null instead of omitting)
+  for (const key of Object.keys(parsed)) {
+    if (parsed[key] === null) delete parsed[key];
   }
 
   // Normalize extracted data
