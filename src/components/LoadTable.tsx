@@ -18,7 +18,7 @@ export function LoadTable({ loads, onRemove }: LoadTableProps) {
 
   return (
     <div className="overflow-x-auto rounded-2xl border border-steel/10 bg-white shadow-card">
-      <table className="w-full text-sm border-collapse">
+      <table className="w-full min-w-[640px] text-sm border-collapse">
         <thead>
           <tr className="bg-lane/50 border-b border-steel/10 text-steel text-[11px] font-bold uppercase tracking-wider">
             <th className="px-5 py-4 text-left">Load Info</th>

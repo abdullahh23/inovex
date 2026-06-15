@@ -58,8 +58,18 @@ function ClassicTemplate({
     >
       {/* ── HEADER ── */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0' }}>
-        <div style={{ fontSize: '28px', fontWeight: '900', color: NAVY, letterSpacing: '0.5px', lineHeight: 1.1 }}>
-          DISPATCH FEE INVOICE
+        <div>
+          {company.companyLogo && (
+            <img src={company.companyLogo} alt="Logo" style={{ maxHeight: '60px', objectFit: 'contain', marginBottom: '8px' }} />
+          )}
+          <div style={{ fontSize: '28px', fontWeight: '900', color: NAVY, letterSpacing: '0.5px', lineHeight: 1.1 }}>
+            DISPATCH FEE INVOICE
+          </div>
+          {company.companyHeaderText && (
+            <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 500, marginTop: '2px' }}>
+              {company.companyHeaderText}
+            </div>
+          )}
         </div>
 
         {/* Invoice meta */}

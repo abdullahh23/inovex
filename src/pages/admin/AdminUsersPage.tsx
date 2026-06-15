@@ -132,7 +132,7 @@ export function AdminUsersPage() {
             {search ? 'No users match your search.' : 'No users registered yet.'}
           </div>
         ) : (
-          <table className="w-full text-sm border-collapse">
+          <table className="w-full min-w-[800px] text-sm border-collapse">
             <thead>
               <tr className="bg-lane/50 border-b border-steel/10 text-steel text-[11px] font-bold uppercase tracking-wider">
                 <th className="px-5 py-4 text-left">Email Address</th>

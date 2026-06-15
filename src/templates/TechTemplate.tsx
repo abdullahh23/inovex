@@ -52,9 +52,17 @@ export function TechTemplate({
             <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#0d9488' }} />
             <span style={{ color: '#0f766e', fontWeight: '700', textTransform: 'uppercase', fontSize: '9px', letterSpacing: '1px' }}>SYSTEM BILLING</span>
           </div>
+          {company.companyLogo && (
+            <img src={company.companyLogo} alt="Logo" style={{ maxHeight: '60px', objectFit: 'contain', marginBottom: '8px' }} />
+          )}
           <div style={{ fontSize: '22px', fontWeight: '800', color: '#0f172a', letterSpacing: '-0.5px' }}>
             {company.companyName || 'Dispatch Co.'}
           </div>
+          {company.companyHeaderText && (
+            <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 500, marginTop: '2px' }}>
+              {company.companyHeaderText}
+            </div>
+          )}
           <div style={{ color: '#64748b', marginTop: '2px' }}>Weekly Fee Statement</div>
         </div>
 

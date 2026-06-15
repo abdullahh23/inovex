@@ -50,9 +50,17 @@ export function ExecutiveTemplate({
       {/* Dark Bold Header Block */}
       <div style={{ background: '#1a202c', color: '#ffffff', padding: '40px 50px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
+          {company.companyLogo && (
+            <img src={company.companyLogo} alt="Logo" style={{ maxHeight: '60px', objectFit: 'contain', marginBottom: '8px' }} />
+          )}
           <div style={{ fontSize: '24px', fontWeight: '800', letterSpacing: '1px', textTransform: 'uppercase', color: '#ecc94b' }}>
             {company.companyName || 'DISPATCH LOGISTICS'}
           </div>
+          {company.companyHeaderText && (
+            <div style={{ fontSize: '10px', color: '#a0aec0', fontWeight: 500, marginTop: '2px' }}>
+              {company.companyHeaderText}
+            </div>
+          )}
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontSize: '12px', color: '#a0aec0' }}>INVOICE NUMBER</div>

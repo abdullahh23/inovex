@@ -22,9 +22,19 @@ export interface CompanySettings {
   bankInformation: string;
   dispatchPercentage: number;
   templateId?: string;
+  companyLogo?: string;
+  companyHeaderText?: string;
 }
 
 export interface CarrierSettings {
+  carrierName: string;
+  carrierAddress: string;
+  mcNumber: string;
+  carrierPhone: string;
+}
+
+export interface SavedCarrier {
+  id: string;
   carrierName: string;
   carrierAddress: string;
   mcNumber: string;

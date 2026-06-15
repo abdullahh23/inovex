@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Truck, LayoutDashboard, FileText, Settings, LogOut, Shield, Menu, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Truck, LayoutDashboard, FileText, Settings, LogOut, Shield, Menu, X, ChevronLeft, ChevronRight, Sun, Moon } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { DataProvider, useAppLoads } from '../contexts/DataContext';
 
@@ -14,6 +14,18 @@ function UserLayoutInner() {
   // Responsive sidebar states
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme') === 'dark');
+  
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark');
+      localStorage.setItem('theme', 'dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      localStorage.setItem('theme', 'light');
+    }
+  }, [darkMode]);
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -113,6 +125,15 @@ function UserLayoutInner() {
             </div>
           )}
         </div>
+
+        {/* Dark Mode Toggle */}
+        <button
+          onClick={() => setDarkMode(!darkMode)}
+          className="flex items-center gap-3 w-full px-3 py-2 text-xs font-medium text-steel hover:text-signal hover:bg-signal/5 rounded-xl transition-all"
+        >
+          {darkMode ? <Sun size={16} className="shrink-0" /> : <Moon size={16} className="shrink-0" />}
+          {!collapsed && <span>{darkMode ? 'Light Mode' : 'Dark Mode'}</span>}
+        </button>
 
         {/* Logout Button */}
         <button

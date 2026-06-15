@@ -1,4 +1,5 @@
-import { Printer, LayoutTemplate } from 'lucide-react';
+import { Printer, LayoutTemplate, Download } from 'lucide-react';
+import { downloadInvoicePDF } from '../lib/pdf';
 import { InvoiceTemplate } from '../templates/InvoiceTemplate';
 import type { Load, CompanySettings, CarrierSettings } from '../types';
 
@@ -65,6 +66,14 @@ export function InvoicePage({
           >
             <Printer size={15} />
             Print / Save PDF
+          </button>
+
+          {/* Download PDF Button */}
+          <button
+            onClick={() => downloadInvoicePDF(invoiceNumber)}
+            className="flex items-center gap-2 px-5 py-2.5 bg-ink text-white rounded-xl font-semibold text-sm hover:bg-road transition-all shadow-sm no-print"
+          >
+            <Download size={16} /> Download PDF
           </button>
         </div>
       </div>

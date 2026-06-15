@@ -1,11 +1,17 @@
-import { useState } from 'react';
-import { Save, CheckCircle, Building2, Truck, DollarSign, Wallet } from 'lucide-react';
-import type { CompanySettings, CarrierSettings } from '../types';
+import { useState, useRef } from 'react';
+import { Save, CheckCircle, Building2, Truck, DollarSign, Wallet, Upload, X, Image, BookmarkPlus, Trash2 } from 'lucide-react';
+import type { CompanySettings, CarrierSettings, SavedCarrier } from '../types';
+import { supabase } from '../lib/supabase';
+import { useAuth } from '../contexts/AuthContext';
 
 interface SettingsPageProps {
   company: CompanySettings;
   carrier: CarrierSettings;
+  savedCarriers: SavedCarrier[];
   onSave: (company: CompanySettings, carrier: CarrierSettings) => void | Promise<void>;
+  onAddCarrier: (carrier: CarrierSettings) => void | Promise<void>;
+  onRemoveCarrier: (id: string) => void | Promise<void>;
+  onLoadCarrier: (id: string) => void;
 }
 
 function Field({ label, value, onChange, type = 'text', placeholder = '' }: {
@@ -43,10 +49,13 @@ function TextArea({ label, value, onChange, placeholder = '' }: {
   );
 }
 
-export function SettingsPage({ company, carrier, onSave }: SettingsPageProps) {
+export function SettingsPage({ company, carrier, savedCarriers, onSave, onAddCarrier, onRemoveCarrier, onLoadCarrier }: SettingsPageProps) {
+  const { user } = useAuth();
   const [comp, setComp] = useState<CompanySettings>(company);
   const [carr, setCarr] = useState<CarrierSettings>(carrier);
   const [saved, setSaved] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   const handleSave = async () => {
     await onSave(comp, carr);
@@ -54,8 +63,35 @@ export function SettingsPage({ company, carrier, onSave }: SettingsPageProps) {
     setTimeout(() => setSaved(false), 2500);
   };
 
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    setUploading(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `${user.id}/logo-${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from('logos').upload(path, file, { upsert: true });
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from('logos').getPublicUrl(path);
+      setComp(prev => ({ ...prev, companyLogo: urlData.publicUrl }));
+    } catch (err) {
+      console.error('Logo upload failed:', err);
+    }
+    setUploading(false);
+  };
+
+  const removeLogo = () => setComp(prev => ({ ...prev, companyLogo: '' }));
+
   const setC = (k: keyof CompanySettings) => (v: string) => setComp(prev => ({ ...prev, [k]: k === 'dispatchPercentage' ? Number(v) : v }));
   const setK = (k: keyof CarrierSettings) => (v: string) => setCarr(prev => ({ ...prev, [k]: v }));
+
+  const handleSelectCarrier = (id: string) => {
+    onLoadCarrier(id);
+    const found = savedCarriers.find(c => c.id === id);
+    if (found) {
+      setCarr({ carrierName: found.carrierName, carrierAddress: found.carrierAddress, mcNumber: found.mcNumber, carrierPhone: found.carrierPhone });
+    }
+  };
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
@@ -63,6 +99,44 @@ export function SettingsPage({ company, carrier, onSave }: SettingsPageProps) {
         <h1 className="text-2xl md:text-3xl font-extrabold text-ink tracking-tight font-outfit">Settings</h1>
         <p className="text-steel text-sm mt-0.5 font-medium">Configure company info, carrier settings, and payment preferences.</p>
       </div>
+
+      {/* Company Branding */}
+      <section className="bg-white rounded-2xl shadow-panel border border-steel/10 p-6 space-y-4">
+        <div className="flex items-center gap-2.5 border-b border-steel/5 pb-3">
+          <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center border border-purple-100">
+            <Image size={16} />
+          </div>
+          <h2 className="text-sm font-bold text-ink uppercase tracking-wider">Company Branding</h2>
+        </div>
+        <div className="flex items-start gap-6">
+          <div className="space-y-2">
+            <label className="block text-xxs font-bold text-steel uppercase tracking-widest">Company Logo</label>
+            {comp.companyLogo ? (
+              <div className="relative inline-block">
+                <img src={comp.companyLogo} alt="Logo" className="max-h-20 max-w-48 object-contain rounded-lg border border-steel/10" />
+                <button onClick={removeLogo} className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-all">
+                  <X size={10} />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => fileRef.current?.click()}
+                disabled={uploading}
+                className="flex items-center gap-2 px-4 py-2.5 border-2 border-dashed border-steel/20 rounded-xl text-xs text-steel hover:border-signal hover:text-signal transition-all"
+              >
+                <Upload size={14} />
+                {uploading ? 'Uploading...' : 'Upload Logo'}
+              </button>
+            )}
+            <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+            <p className="text-[10px] text-steel">PNG, JPG. Max 120px height on invoice.</p>
+          </div>
+          <div className="flex-1">
+            <Field label="Custom Header Text" value={comp.companyHeaderText || ''} onChange={setC('companyHeaderText')} placeholder="e.g. Premium Dispatch Services" />
+            <p className="text-[10px] text-steel mt-1">Appears under company name on invoices</p>
+          </div>
+        </div>
+      </section>
 
       {/* Dispatch Company */}
       <section className="bg-white rounded-2xl shadow-panel border border-steel/10 p-6 space-y-4">
@@ -72,130 +146,102 @@ export function SettingsPage({ company, carrier, onSave }: SettingsPageProps) {
           </div>
           <h2 className="text-sm font-bold text-ink uppercase tracking-wider">Dispatch Company Profile</h2>
         </div>
-        
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2">
             <Field label="Company Name" value={comp.companyName} onChange={setC('companyName')} placeholder="e.g. Apex Dispatch Services" />
           </div>
           <div className="sm:col-span-2">
-            <Field label="Company Address" value={comp.companyAddress} onChange={setC('companyAddress')} placeholder="e.g. 100 Main St, Suite 400, Chicago, IL" />
+            <Field label="Address" value={comp.companyAddress} onChange={setC('companyAddress')} placeholder="Street, City, State ZIP" />
           </div>
-          <Field label="Contact Phone" value={comp.companyPhone} onChange={setC('companyPhone')} placeholder="e.g. (555) 123-4567" />
-          <Field label="Contact Email" value={comp.companyEmail} onChange={setC('companyEmail')} type="email" placeholder="e.g. billing@apexdispatch.com" />
+          <Field label="Phone" value={comp.companyPhone} onChange={setC('companyPhone')} placeholder="(555) 123-4567" />
+          <Field label="Email" value={comp.companyEmail} onChange={setC('companyEmail')} placeholder="dispatch@company.com" />
         </div>
       </section>
 
-      {/* Carrier Defaults */}
+      {/* Carrier Section */}
       <section className="bg-white rounded-2xl shadow-panel border border-steel/10 p-6 space-y-4">
-        <div className="flex items-center gap-2.5 border-b border-steel/5 pb-3">
-          <div className="w-8 h-8 rounded-lg bg-signal/5 text-signal flex items-center justify-center">
-            <Truck size={16} />
-          </div>
-          <div>
+        <div className="flex items-center justify-between border-b border-steel/5 pb-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-amberline/10 text-amberline flex items-center justify-center">
+              <Truck size={16} />
+            </div>
             <h2 className="text-sm font-bold text-ink uppercase tracking-wider">Carrier Information</h2>
-            <p className="text-[10px] text-steel font-semibold -mt-0.5">Carrier information defaults for invoice billing.</p>
           </div>
+          {carr.carrierName && (
+            <button
+              onClick={() => onAddCarrier(carr)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold text-signal bg-signal/5 border border-signal/20 rounded-xl hover:bg-signal hover:text-white transition-all"
+            >
+              <BookmarkPlus size={12} /> Save Carrier
+            </button>
+          )}
         </div>
+
+        {savedCarriers.length > 0 && (
+          <div>
+            <label className="block text-xxs font-bold text-steel uppercase tracking-widest mb-1.5">Quick Select Saved Carrier</label>
+            <div className="flex flex-wrap gap-2">
+              {savedCarriers.map(sc => (
+                <div key={sc.id} className="flex items-center gap-1">
+                  <button
+                    onClick={() => handleSelectCarrier(sc.id)}
+                    className="px-3 py-1.5 text-xs font-semibold bg-lane border border-steel/15 rounded-lg hover:border-signal hover:text-signal transition-all"
+                  >
+                    {sc.carrierName} {sc.mcNumber && `(${sc.mcNumber})`}
+                  </button>
+                  <button
+                    onClick={() => onRemoveCarrier(sc.id)}
+                    className="p-1 text-steel hover:text-red-500 transition-all"
+                    title="Remove saved carrier"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Carrier Name" value={carr.carrierName} onChange={setK('carrierName')} placeholder="e.g. Red Line Express LLC" />
-          <Field label="MC Number" value={carr.mcNumber} onChange={setK('mcNumber')} placeholder="e.g. MC-123456" />
           <div className="sm:col-span-2">
-            <Field label="Carrier Address" value={carr.carrierAddress} onChange={setK('carrierAddress')} placeholder="e.g. 450 Freight Rd, Dallas, TX" />
+            <Field label="Carrier / Trucking Company" value={carr.carrierName} onChange={setK('carrierName')} placeholder="e.g. Swift Trucking LLC" />
           </div>
           <div className="sm:col-span-2">
-            <Field label="Carrier Phone" value={carr.carrierPhone} onChange={setK('carrierPhone')} placeholder="e.g. (555) 987-6543" />
+            <Field label="Address" value={carr.carrierAddress} onChange={setK('carrierAddress')} placeholder="Street, City, State ZIP" />
           </div>
-        </div>
-      </section>
-
-      {/* Dispatch Percentage */}
-      <section className="bg-white rounded-2xl shadow-panel border border-steel/10 p-6 space-y-4">
-        <div className="flex items-center gap-2.5 border-b border-steel/5 pb-3">
-          <div className="w-8 h-8 rounded-lg bg-signal/5 text-signal flex items-center justify-center">
-            <DollarSign size={16} />
-          </div>
-          <h2 className="text-sm font-bold text-ink uppercase tracking-wider">Service Commission Rate</h2>
-        </div>
-        <div>
-          <label className="block text-xxs font-bold text-steel uppercase tracking-widest mb-1.5">Dispatch Fee Percentage</label>
-          <div className="flex items-center gap-3">
-            <input
-              type="number"
-              min={1}
-              max={50}
-              step={0.5}
-              value={comp.dispatchPercentage}
-              onChange={e => setComp(prev => ({ ...prev, dispatchPercentage: Number(e.target.value) }))}
-              className="w-24 border border-steel/20 rounded-xl px-4 py-2.5 text-sm text-ink bg-white focus:outline-none focus:ring-4 focus:ring-signal/10 focus:border-signal/70 transition-all font-mono"
-            />
-            <span className="text-steel text-xs font-semibold">% of Weekly Load Total Gross Revenue</span>
-          </div>
-        </div>
-      </section>
-
-      {/* Invoice Template Styling */}
-      <section className="bg-white rounded-2xl shadow-panel border border-steel/10 p-6 space-y-4">
-        <div className="flex items-center gap-2.5 border-b border-steel/5 pb-3">
-          <div className="w-8 h-8 rounded-lg bg-signal/5 text-signal flex items-center justify-center">
-            <Wallet size={16} />
-          </div>
-          <h2 className="text-sm font-bold text-ink uppercase tracking-wider">Invoice statement Design</h2>
-        </div>
-        <div>
-          <label className="block text-xxs font-bold text-steel uppercase tracking-widest mb-2.5">Default Invoice Template</label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {[
-              { id: 'classic', name: 'Corporate Classic', desc: 'Elegant Navy and Gold traditional layout.' },
-              { id: 'modern', name: 'Modern Minimalist', desc: 'Clean, high-contrast monochrome design.' },
-              { id: 'cargo', name: 'Executive Cargo', desc: 'Bold grid lines with amber logistics accents.' },
-              { id: 'teal', name: 'Emerald Steel', desc: 'Polished tech startup slate and teal theme.' }
-            ].map(t => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => setComp(prev => ({ ...prev, templateId: t.id }))}
-                className={`p-4 rounded-xl border text-left transition-all ${
-                  (comp.templateId || 'classic') === t.id
-                    ? 'border-signal bg-signal/5 ring-2 ring-signal/20'
-                    : 'border-steel/15 hover:border-steel/30 bg-white shadow-xxs'
-                }`}
-              >
-                <div className="font-bold text-sm text-ink">{t.name}</div>
-                <div className="text-xxs text-steel mt-1 font-semibold">{t.desc}</div>
-              </button>
-            ))}
-          </div>
+          <Field label="MC Number" value={carr.mcNumber} onChange={setK('mcNumber')} placeholder="MC-123456" />
+          <Field label="Phone" value={carr.carrierPhone} onChange={setK('carrierPhone')} placeholder="(555) 987-6543" />
         </div>
       </section>
 
       {/* Payment */}
       <section className="bg-white rounded-2xl shadow-panel border border-steel/10 p-6 space-y-4">
         <div className="flex items-center gap-2.5 border-b border-steel/5 pb-3">
-          <div className="w-8 h-8 rounded-lg bg-signal/5 text-signal flex items-center justify-center">
-            <Wallet size={16} />
+          <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+            <DollarSign size={16} />
           </div>
-          <h2 className="text-sm font-bold text-ink uppercase tracking-wider">Payment Information</h2>
+          <h2 className="text-sm font-bold text-ink uppercase tracking-wider">Payment & Billing</h2>
         </div>
-        <TextArea label="Payment Instructions" value={comp.paymentInstructions} onChange={setC('paymentInstructions')} placeholder="e.g. Please remit payment within 5 business days." />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Field label="Zelle" value={comp.zelle} onChange={setC('zelle')} placeholder="e.g. finance@apexdispatch.com" />
-          <Field label="Payoneer" value={comp.payoneer} onChange={setC('payoneer')} placeholder="e.g. payments@apexdispatch.com" />
+          <Field label="Dispatch %" value={String(comp.dispatchPercentage)} onChange={v => setComp(p => ({ ...p, dispatchPercentage: Number(v) || 0 }))} type="number" placeholder="10" />
+          <Field label="Zelle" value={comp.zelle} onChange={setC('zelle')} placeholder="zelle@email.com" />
+          <Field label="Payoneer" value={comp.payoneer} onChange={setC('payoneer')} placeholder="payoneer@email.com" />
           <div className="sm:col-span-2">
-            <TextArea label="Bank Account Details (Wire/ACH)" value={comp.bankInformation} onChange={setC('bankInformation')} placeholder="e.g. Bank Name: Chase Bank, Routing: 123456789, Account: 987654321" />
+            <TextArea label="Bank Information" value={comp.bankInformation} onChange={setC('bankInformation')} placeholder="Bank name, routing #, account #" />
+          </div>
+          <div className="sm:col-span-2">
+            <TextArea label="Payment Instructions (legacy)" value={comp.paymentInstructions} onChange={setC('paymentInstructions')} placeholder="Additional payment notes..." />
           </div>
         </div>
       </section>
 
-      {/* Actions */}
-      <div className="flex justify-end pt-4 pb-8">
-        <button
-          onClick={handleSave}
-          className="flex items-center gap-2 bg-signal text-white px-6 py-3 rounded-xl font-bold hover:bg-signal/90 shadow-sm transition-all text-xs"
-        >
-          {saved ? <><CheckCircle size={15} /> Saved!</> : <><Save size={15} /> Save Settings</>}
-        </button>
-      </div>
+      {/* Save Button */}
+      <button
+        onClick={handleSave}
+        className="flex items-center gap-2 px-6 py-3 bg-signal text-white rounded-xl font-bold text-sm hover:bg-signal/90 shadow-sm hover:shadow-md transition-all"
+      >
+        {saved ? <><CheckCircle size={16} /> Saved!</> : <><Save size={16} /> Save All Settings</>}
+      </button>
     </div>
   );
 }
