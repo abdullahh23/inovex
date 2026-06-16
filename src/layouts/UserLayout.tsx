@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Truck, LayoutDashboard, FileText, Settings, LogOut, Shield, Menu, X, ChevronLeft, ChevronRight, Sun, Moon } from 'lucide-react';
+import { Truck, LayoutDashboard, FileText, Settings, LogOut, Shield, Menu, X, ChevronLeft, ChevronRight, Sun, Moon, History } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { DataProvider, useAppLoads } from '../contexts/DataContext';
 
@@ -37,6 +37,7 @@ function UserLayoutInner() {
     { to: '/dashboard', label: 'Weekly Loads', icon: LayoutDashboard },
     { to: '/invoice', label: 'Invoice statements', icon: FileText },
     { to: '/settings', label: 'Company settings', icon: Settings },
+    { to: '/carrier-history', label: 'Carrier History', icon: History },
   ];
 
   if (isAdmin) {

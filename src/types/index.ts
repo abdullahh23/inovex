@@ -20,6 +20,8 @@ export interface CompanySettings {
   zelle: string;
   payoneer: string;
   bankInformation: string;
+  cashApp: string;
+  accountHolderName: string;
   dispatchPercentage: number;
   templateId?: string;
   companyLogo?: string;
@@ -50,3 +52,31 @@ export interface WeeklyInvoice {
   invoiceNumber: string;
   invoiceDate: string;
 }
+
+export interface InvoiceRecord {
+  id: string;
+  userId: string;
+  invoiceNumber: string;
+  invoiceDate: string;
+  weekLabel: string;
+  dispatchPercentage: number;
+  totalGrossRevenue: number;
+  dispatchFee: number;
+  status: 'paid' | 'unpaid';
+  carrierName: string;
+  paymentMethod: string;
+  companySnapshot: CompanySettings;
+  carrierSnapshot: CarrierSettings;
+  createdAt: string;
+}
+
+export interface CarrierHistory {
+  carrierName: string;
+  totalLoads: number;
+  totalInvoices: number;
+  totalGrossAmount: number;
+  totalDispatchFees: number;
+  totalPaid: number;
+  totalUnpaid: number;
+}
+

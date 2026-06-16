@@ -33,6 +33,12 @@ export function InvoicePage({
     { id: 'teal', name: 'Emerald Steel' },
   ];
 
+  const handleDownload = async () => {
+    // Trigger save via onPrint first, then download
+    await onPrint();
+    downloadInvoicePDF(invoiceNumber);
+  };
+
   return (
     <div className="space-y-6">
       {/* Action Toolbar */}
@@ -70,7 +76,7 @@ export function InvoicePage({
 
           {/* Download PDF Button */}
           <button
-            onClick={() => downloadInvoicePDF(invoiceNumber)}
+            onClick={handleDownload}
             className="flex items-center gap-2 px-5 py-2.5 bg-ink text-white rounded-xl font-semibold text-sm hover:bg-road transition-all shadow-sm no-print"
           >
             <Download size={16} /> Download PDF

@@ -38,6 +38,24 @@ export function useLoads() {
     if (error || !data) throw new Error(error?.message ?? 'Failed to save load');
     const saved = rowToLoad(data);
     setLoads(prev => [...prev, saved]);
+
+    // Increment the correct counter based on source type
+    try {
+      const counterField = source === 'manual' ? 'manual_loads_used' : 'file_uploads_used';
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select(counterField)
+        .eq('id', user.id)
+        .single();
+      const currentVal = (profile as any)?.[counterField] ?? 0;
+      await supabase
+        .from('profiles')
+        .update({ [counterField]: currentVal + 1 })
+        .eq('id', user.id);
+    } catch (e) {
+      console.error('Failed to increment upload counter:', e);
+    }
+
     return saved;
   }, [user]);
 

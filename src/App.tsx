@@ -10,6 +10,7 @@ import { VerifyEmailPage } from './pages/auth/VerifyEmailPage';
 import { DashboardRoute } from './pages/DashboardRoute';
 import { InvoiceRoute } from './pages/InvoiceRoute';
 import { SettingsRoute } from './pages/SettingsRoute';
+import { CarrierHistoryRoute } from './pages/CarrierHistoryRoute';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { AdminUsersPage } from './pages/admin/AdminUsersPage';
 
@@ -26,6 +27,7 @@ export function App() {
           <Route path="/dashboard" element={<DashboardRoute />} />
           <Route path="/invoice" element={<InvoiceRoute />} />
           <Route path="/settings" element={<SettingsRoute />} />
+          <Route path="/carrier-history" element={<CarrierHistoryRoute />} />
         </Route>
 
         <Route element={<AdminRoute><AdminLayout /></AdminRoute>}>

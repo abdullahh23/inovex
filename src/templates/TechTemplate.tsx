@@ -21,7 +21,9 @@ export function TechTemplate({
   const { totalGrossRevenue, dispatchFee } = calcTotals(loads, company.dispatchPercentage);
   const weLabel = weekLabel.replace('Week of ', 'W/E ').split('–')[1]?.trim() ?? weekLabel;
 
-  const paymentMethod = company.zelle
+  const paymentMethod = company.cashApp
+    ? `Cash App: ${company.cashApp}`
+    : company.zelle
     ? `Zelle Account: ${company.zelle}`
     : company.payoneer
     ? `Payoneer: ${company.payoneer}`
@@ -57,15 +59,10 @@ export function TechTemplate({
               <img src={company.companyLogo} alt="Logo" style={{ height: '45px', width: 'auto', objectFit: 'contain' }} />
             )}
             <div>
-              <div style={{ fontSize: '22px', fontWeight: '800', color: '#0f172a', letterSpacing: '-0.5px' }}>
-                {company.companyName || 'Dispatch Co.'}
+              <div style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a', letterSpacing: '-0.5px' }}>
+                {company.companyHeaderText || company.companyName || 'Dispatch Co.'}
               </div>
-              {company.companyHeaderText && (
-                <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 500, marginTop: '2px' }}>
-                  {company.companyHeaderText}
-                </div>
-              )}
-              <div style={{ color: '#64748b', marginTop: '2px' }}>Weekly Fee Statement</div>
+              <div style={{ color: '#64748b', marginTop: '2px', fontSize: '11px' }}>Dispatch Fee Invoice</div>
             </div>
           </div>
         </div>
@@ -161,6 +158,11 @@ export function TechTemplate({
         <div style={{ flex: 1, padding: '16px', background: 'rgba(241, 245, 249, 0.5)', border: '1px solid #f1f5f9', borderRadius: '12px' }}>
           <div style={{ fontWeight: '700', fontSize: '10px', color: '#64748b', textTransform: 'uppercase', marginBottom: '6px' }}>Statement Remittance</div>
           <div style={{ color: '#475569', lineHeight: '1.5', fontSize: '11px' }}>{paymentMethod}</div>
+          {company.accountHolderName && (
+            <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #e2e8f0', fontSize: '10px', color: '#475569' }}>
+              <span style={{ fontWeight: 700 }}>Account Holder: </span>{company.accountHolderName}
+            </div>
+          )}
         </div>
 
         {/* Right Side: Total summary Card */}

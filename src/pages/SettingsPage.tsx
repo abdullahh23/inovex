@@ -226,11 +226,15 @@ export function SettingsPage({ company, carrier, savedCarriers, onSave, onAddCar
           <Field label="Dispatch %" value={String(comp.dispatchPercentage)} onChange={v => setComp(p => ({ ...p, dispatchPercentage: Number(v) || 0 }))} type="number" placeholder="10" />
           <Field label="Zelle" value={comp.zelle} onChange={setC('zelle')} placeholder="zelle@email.com" />
           <Field label="Payoneer" value={comp.payoneer} onChange={setC('payoneer')} placeholder="payoneer@email.com" />
+          <Field label="Cash App" value={comp.cashApp || ''} onChange={setC('cashApp')} placeholder="$cashtag" />
           <div className="sm:col-span-2">
             <TextArea label="Bank Information" value={comp.bankInformation} onChange={setC('bankInformation')} placeholder="Bank name, routing #, account #" />
           </div>
           <div className="sm:col-span-2">
             <TextArea label="Payment Instructions (legacy)" value={comp.paymentInstructions} onChange={setC('paymentInstructions')} placeholder="Additional payment notes..." />
+          </div>
+          <div className="sm:col-span-2">
+            <Field label="Account Holder Name" value={comp.accountHolderName || ''} onChange={setC('accountHolderName')} placeholder="Full legal name on payment account" />
           </div>
         </div>
       </section>

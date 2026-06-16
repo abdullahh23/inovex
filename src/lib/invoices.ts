@@ -25,6 +25,9 @@ export async function saveInvoice(
       dispatch_fee: dispatchFee,
       company_snapshot: company,
       carrier_snapshot: carrier,
+      carrier_name: carrier.carrierName || '',
+      status: 'unpaid',
+      payment_method: company.cashApp ? 'Cash App' : company.zelle ? 'Zelle' : company.payoneer ? 'Payoneer' : company.bankInformation ? 'Bank Transfer' : 'Other',
     })
     .select()
     .single();
@@ -83,7 +86,7 @@ export async function fetchAdminUsers() {
 
   const fullQuery = await supabase
     .from('profiles')
-    .select('id, email, full_name, role, is_disabled, status, monthly_upload_limit, uploads_used, approved_at, created_at')
+    .select('id, email, full_name, role, is_disabled, status, monthly_upload_limit, uploads_used, manual_load_limit, file_upload_limit, manual_loads_used, file_uploads_used, approved_at, created_at')
     .order('created_at', { ascending: false });
 
   if (fullQuery.error) {
@@ -99,6 +102,10 @@ export async function fetchAdminUsers() {
       status: 'approved',
       monthly_upload_limit: 50,
       uploads_used: 0,
+      manual_load_limit: 2,
+      file_upload_limit: 2,
+      manual_loads_used: 0,
+      file_uploads_used: 0,
       approved_at: null,
     }));
   } else {
@@ -153,6 +160,22 @@ export async function updateUserLimit(userId: string, limit: number) {
   if (error) throw new Error(error.message.includes('column') ? 'Run the database migration first (003_approval_quota.sql)' : error.message);
 }
 
+export async function updateUserManualLimit(userId: string, limit: number) {
+  const { error } = await supabase.from('profiles').update({
+    manual_load_limit: limit,
+    updated_at: new Date().toISOString(),
+  }).eq('id', userId);
+  if (error) throw new Error(error.message);
+}
+
+export async function updateUserFileLimit(userId: string, limit: number) {
+  const { error } = await supabase.from('profiles').update({
+    file_upload_limit: limit,
+    updated_at: new Date().toISOString(),
+  }).eq('id', userId);
+  if (error) throw new Error(error.message);
+}
+
 export async function fetchAdminNotifications(limit = 20) {
   try {
     const { data, error } = await supabase
@@ -172,4 +195,53 @@ export async function markNotificationRead(notificationId: string) {
   if (error) throw new Error(error.message);
 }
 
+export async function fetchUserInvoices(userId: string) {
+  const { data, error } = await supabase
+    .from('invoices')
+    .select('*, invoice_loads(*)')
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
 
+export async function toggleInvoiceStatus(invoiceId: string, newStatus: 'paid' | 'unpaid') {
+  const { error } = await supabase
+    .from('invoices')
+    .update({ status: newStatus })
+    .eq('id', invoiceId);
+  if (error) throw new Error(error.message);
+}
+
+export async function deleteInvoice(invoiceId: string) {
+  const { error } = await supabase
+    .from('invoices')
+    .delete()
+    .eq('id', invoiceId);
+  if (error) throw new Error(error.message);
+}
+
+export async function fetchCarrierHistory(userId: string) {
+  const { data, error } = await supabase
+    .from('invoices')
+    .select(`
+      id,
+      invoice_number,
+      invoice_date,
+      week_label,
+      dispatch_percentage,
+      total_gross_revenue,
+      dispatch_fee,
+      status,
+      carrier_name,
+      payment_method,
+      carrier_snapshot,
+      company_snapshot,
+      created_at,
+      invoice_loads(id, load_number, broker_name, pickup_date, gross_amount, origin_city, origin_state, destination_city, destination_state)
+    `)
+    .eq('user_id', userId)
+    .order('created_at', { ascending: false });
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}

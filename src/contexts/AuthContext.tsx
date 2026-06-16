@@ -17,6 +17,8 @@ interface AuthContextValue {
   isPending: boolean;
   isSuspended: boolean;
   canUpload: boolean;
+  canUploadFile: boolean;
+  canAddManual: boolean;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -143,7 +145,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const limit = profile?.monthly_upload_limit ?? 0;
   const used = profile?.uploads_used ?? 0;
   const quotaExceeded = isApproved && limit > 0 && used >= limit;
-  const canUpload = isApproved && !quotaExceeded && !profile?.is_disabled;
+
+  // Split limits
+  const manualLimit = profile?.manual_load_limit ?? 2;
+  const manualUsed = profile?.manual_loads_used ?? 0;
+  const fileLimit = profile?.file_upload_limit ?? 2;
+  const fileUsed = profile?.file_uploads_used ?? 0;
+  const manualQuotaExceeded = isApproved && manualLimit > 0 && manualUsed >= manualLimit;
+  const fileQuotaExceeded = isApproved && fileLimit > 0 && fileUsed >= fileLimit;
+
+  const canUploadFile = isApproved && !fileQuotaExceeded && !profile?.is_disabled;
+  const canAddManual = isApproved && !manualQuotaExceeded && !profile?.is_disabled;
+  const canUpload = canUploadFile || canAddManual;
 
   const value: AuthContextValue = {
     session,
@@ -160,6 +173,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     isPending: !!isPending,
     isSuspended: !!isSuspended,
     canUpload: !!canUpload,
+    canUploadFile: !!canUploadFile,
+    canAddManual: !!canAddManual,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

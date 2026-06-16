@@ -32,7 +32,9 @@ function ClassicTemplate({
   const { totalGrossRevenue, dispatchFee } = calcTotals(loads, company.dispatchPercentage);
   const weLabel = weekLabel.replace('Week of ', 'W/E ').split('–')[1]?.trim() ?? weekLabel;
 
-  const paymentMethod = company.zelle
+  const paymentMethod = company.cashApp
+    ? `Cash App: ${company.cashApp}`
+    : company.zelle
     ? `Payment via Zelle: ${company.zelle}`
     : company.payoneer
     ? `Payment via Payoneer: ${company.payoneer}`
@@ -63,11 +65,11 @@ function ClassicTemplate({
             <img src={company.companyLogo} alt="Logo" style={{ height: '50px', width: 'auto', objectFit: 'contain' }} />
           )}
           <div>
-            <div style={{ fontSize: '28px', fontWeight: '900', color: NAVY, letterSpacing: '0.5px', lineHeight: 1.1 }}>
-              DISPATCH FEE INVOICE
+            <div style={{ fontSize: '18px', fontWeight: '800', color: NAVY, letterSpacing: '0.3px', lineHeight: 1.2 }}>
+              {company.companyHeaderText || company.companyName || 'Dispatch Services'}
             </div>
             <div style={{ fontSize: '11px', color: GRAY_LABEL, fontWeight: 600, marginTop: '3px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              {company.companyHeaderText || company.companyName || ''}
+              Dispatch Fee Invoice
             </div>
           </div>
         </div>
@@ -222,33 +224,38 @@ function ClassicTemplate({
       </div>
 
       {/* ── PAYMENT BOX ── */}
-      {(company.zelle || company.payoneer || company.bankInformation || company.paymentInstructions) && (
+      {(company.cashApp || company.zelle || company.payoneer || company.bankInformation || company.paymentInstructions) && (
         <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
           border: `1px solid ${BORDER}`,
           borderRadius: '4px',
           padding: '16px 20px',
           marginTop: '16px',
           background: '#fafbfc',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#3d4f63', fontSize: '13px' }}>
-            <span style={{ display: 'inline-block', width: '10px', height: '10px', background: NAVY, borderRadius: '1px', flexShrink: 0 }} />
-            <span>
-              {paymentMethod.includes(':') ? (
-                <>
-                  {paymentMethod.split(':')[0]}:{' '}
-                  <strong style={{ color: NAVY }}>{paymentMethod.split(':').slice(1).join(':').trim()}</strong>
-                </>
-              ) : (
-                <strong style={{ color: NAVY }}>{paymentMethod}</strong>
-              )}
-            </span>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#3d4f63', fontSize: '13px' }}>
+              <span style={{ display: 'inline-block', width: '10px', height: '10px', background: NAVY, borderRadius: '1px', flexShrink: 0 }} />
+              <span>
+                {paymentMethod.includes(':') ? (
+                  <>
+                    {paymentMethod.split(':')[0]}:{' '}
+                    <strong style={{ color: NAVY }}>{paymentMethod.split(':').slice(1).join(':').trim()}</strong>
+                  </>
+                ) : (
+                  <strong style={{ color: NAVY }}>{paymentMethod}</strong>
+                )}
+              </span>
+            </div>
+            <div style={{ fontWeight: '800', fontSize: '22px', color: NAVY }}>
+              {formatCurrency(dispatchFee)}
+            </div>
           </div>
-          <div style={{ fontWeight: '800', fontSize: '22px', color: NAVY }}>
-            {formatCurrency(dispatchFee)}
-          </div>
+          {company.accountHolderName && (
+            <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: `1px solid ${BORDER}`, fontSize: '12px', color: '#3d4f63' }}>
+              <span style={{ fontWeight: 600 }}>Account Holder: </span>
+              <span style={{ color: NAVY, fontWeight: 700 }}>{company.accountHolderName}</span>
+            </div>
+          )}
         </div>
       )}
     </div>

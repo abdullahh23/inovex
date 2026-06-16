@@ -18,6 +18,10 @@ export type Profile = {
   status: 'pending' | 'approved' | 'suspended';
   monthly_upload_limit: number;
   uploads_used: number;
+  manual_load_limit: number;
+  file_upload_limit: number;
+  manual_loads_used: number;
+  file_uploads_used: number;
   uploads_reset_at: string | null;
   approved_at: string | null;
   approved_by: string | null;

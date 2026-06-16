@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { fetchAdminUsers, approveUser, suspendUser, updateUserLimit, setUserDisabled } from '../../lib/invoices';
+import { fetchAdminUsers, approveUser, suspendUser, updateUserManualLimit, updateUserFileLimit, setUserDisabled } from '../../lib/invoices';
 import { useAuth } from '../../contexts/AuthContext';
-import { Users, AlertCircle, RefreshCw, Search, CheckCircle, XCircle, Edit3, Save } from 'lucide-react';
+import { Users, AlertCircle, RefreshCw, Search, CheckCircle, XCircle, Edit3, Save, FileUp, PenLine } from 'lucide-react';
 
 type AdminUser = Awaited<ReturnType<typeof fetchAdminUsers>>[number];
 
@@ -11,8 +11,10 @@ export function AdminUsersPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
-  const [editingLimit, setEditingLimit] = useState<string | null>(null);
-  const [limitValue, setLimitValue] = useState('');
+  const [editingManualLimit, setEditingManualLimit] = useState<string | null>(null);
+  const [editingFileLimit, setEditingFileLimit] = useState<string | null>(null);
+  const [manualLimitValue, setManualLimitValue] = useState('');
+  const [fileLimitValue, setFileLimitValue] = useState('');
 
   const load = () => {
     setLoading(true);
@@ -52,15 +54,30 @@ export function AdminUsersPage() {
     }
   };
 
-  const handleSaveLimit = async (userId: string) => {
+  const handleSaveManualLimit = async (userId: string) => {
     try {
-      const val = parseInt(limitValue, 10);
+      const val = parseInt(manualLimitValue, 10);
       if (isNaN(val) || val < 0) {
         setError('Limit must be a positive number (0 = unlimited).');
         return;
       }
-      await updateUserLimit(userId, val);
-      setEditingLimit(null);
+      await updateUserManualLimit(userId, val);
+      setEditingManualLimit(null);
+      load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Update failed.');
+    }
+  };
+
+  const handleSaveFileLimit = async (userId: string) => {
+    try {
+      const val = parseInt(fileLimitValue, 10);
+      if (isNaN(val) || val < 0) {
+        setError('Limit must be a positive number (0 = unlimited).');
+        return;
+      }
+      await updateUserFileLimit(userId, val);
+      setEditingFileLimit(null);
       load();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Update failed.');
@@ -87,13 +104,49 @@ export function AdminUsersPage() {
     );
   };
 
+  const LimitEditor = ({ userId, field, currentLimit, currentUsed, editing, setEditing, value, setValue, onSave, icon: Icon, label }: {
+    userId: string; field: string; currentLimit: number; currentUsed: number;
+    editing: string | null; setEditing: (v: string | null) => void;
+    value: string; setValue: (v: string) => void;
+    onSave: (id: string) => void; icon: any; label: string;
+  }) => {
+    if (editing === userId) {
+      return (
+        <div className="flex items-center gap-1 justify-center">
+          <input
+            type="number"
+            min="0"
+            value={value}
+            onChange={e => setValue(e.target.value)}
+            className="w-14 px-1.5 py-1 text-xs border border-steel/20 rounded-lg text-center focus:outline-none focus:ring-1 focus:ring-signal"
+            autoFocus
+            onKeyDown={e => { if (e.key === 'Enter') onSave(userId); if (e.key === 'Escape') setEditing(null); }}
+          />
+          <button onClick={() => onSave(userId)} className="p-1 text-signal hover:bg-signal/10 rounded-lg transition-all" title="Save"><Save size={12} /></button>
+        </div>
+      );
+    }
+    return (
+      <button
+        onClick={() => { setEditing(userId); setValue(String(currentLimit)); }}
+        className="inline-flex items-center gap-1 text-xs font-mono font-semibold text-road hover:text-signal transition-all"
+        title={`Edit ${label} limit (0 = unlimited)`}
+      >
+        <Icon size={10} className="text-steel" />
+        <span className="text-steel/70">{currentUsed}/</span>
+        {currentLimit === 0 ? '∞' : currentLimit}
+        <Edit3 size={9} className="text-steel/50" />
+      </button>
+    );
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Title Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-extrabold text-ink font-outfit">User Accounts</h1>
-          <p className="text-steel text-sm mt-0.5">Manage dispatch platform accounts, approvals, and upload limits.</p>
+          <p className="text-steel text-sm mt-0.5">Manage accounts, approvals, and load limits.</p>
         </div>
         <button
           onClick={load}
@@ -132,26 +185,30 @@ export function AdminUsersPage() {
             {search ? 'No users match your search.' : 'No users registered yet.'}
           </div>
         ) : (
-          <table className="w-full min-w-[800px] text-sm border-collapse">
+          <table className="w-full min-w-[900px] text-sm border-collapse">
             <thead>
               <tr className="bg-lane/50 border-b border-steel/10 text-steel text-[11px] font-bold uppercase tracking-wider">
-                <th className="px-5 py-4 text-left">Email Address</th>
-                <th className="px-5 py-4 text-left">Full Name</th>
-                <th className="px-5 py-4 text-left">Role</th>
-                <th className="px-5 py-4 text-left">Status</th>
-                <th className="px-5 py-4 text-center">Uploads</th>
-                <th className="px-5 py-4 text-center">Limit</th>
-                <th className="px-5 py-4 text-right">Loads</th>
-                <th className="px-5 py-4 text-right">Invoices</th>
-                <th className="px-5 py-4 text-right">Actions</th>
+                <th className="px-4 py-4 text-left">Email</th>
+                <th className="px-4 py-4 text-left">Name</th>
+                <th className="px-4 py-4 text-left">Role</th>
+                <th className="px-4 py-4 text-left">Status</th>
+                <th className="px-4 py-4 text-center">
+                  <div className="flex items-center justify-center gap-1"><PenLine size={10} /> Manual Limit</div>
+                </th>
+                <th className="px-4 py-4 text-center">
+                  <div className="flex items-center justify-center gap-1"><FileUp size={10} /> File Limit</div>
+                </th>
+                <th className="px-4 py-4 text-right">Loads</th>
+                <th className="px-4 py-4 text-right">Invoices</th>
+                <th className="px-4 py-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-steel/5">
               {filtered.map(u => (
                 <tr key={u.id} className="hover:bg-lane/30 transition-all">
-                  <td className="px-5 py-4 font-semibold text-ink text-xs">{u.email}</td>
-                  <td className="px-5 py-4 text-road font-medium">{u.full_name || '—'}</td>
-                  <td className="px-5 py-4">
+                  <td className="px-4 py-4 font-semibold text-ink text-xs">{u.email}</td>
+                  <td className="px-4 py-4 text-road font-medium">{u.full_name || '—'}</td>
+                  <td className="px-4 py-4">
                     <span className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold border ${
                       u.role === 'admin'
                         ? 'bg-purple-50 border-purple-200 text-purple-700'
@@ -160,46 +217,47 @@ export function AdminUsersPage() {
                       {u.role.toUpperCase()}
                     </span>
                   </td>
-                  <td className="px-5 py-4">{statusBadge(u.status || 'approved')}</td>
-                  <td className="px-5 py-4 text-center font-mono font-semibold text-road text-xs">
-                    {u.uploads_used ?? 0}
+                  <td className="px-4 py-4">{statusBadge(u.status || 'approved')}</td>
+
+                  {/* Manual Load Limit */}
+                  <td className="px-4 py-4 text-center">
+                    <LimitEditor
+                      userId={u.id}
+                      field="manual"
+                      currentLimit={(u as any).manual_load_limit ?? 2}
+                      currentUsed={(u as any).manual_loads_used ?? 0}
+                      editing={editingManualLimit}
+                      setEditing={setEditingManualLimit}
+                      value={manualLimitValue}
+                      setValue={setManualLimitValue}
+                      onSave={handleSaveManualLimit}
+                      icon={PenLine}
+                      label="manual"
+                    />
                   </td>
-                  <td className="px-5 py-4 text-center">
-                    {editingLimit === u.id ? (
-                      <div className="flex items-center gap-1 justify-center">
-                        <input
-                          type="number"
-                          min="0"
-                          value={limitValue}
-                          onChange={e => setLimitValue(e.target.value)}
-                          className="w-16 px-2 py-1 text-xs border border-steel/20 rounded-lg text-center focus:outline-none focus:ring-1 focus:ring-signal"
-                          autoFocus
-                          onKeyDown={e => { if (e.key === 'Enter') handleSaveLimit(u.id); if (e.key === 'Escape') setEditingLimit(null); }}
-                        />
-                        <button
-                          onClick={() => handleSaveLimit(u.id)}
-                          className="p-1 text-signal hover:bg-signal/10 rounded-lg transition-all"
-                          title="Save"
-                        >
-                          <Save size={14} />
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => { setEditingLimit(u.id); setLimitValue(String(u.monthly_upload_limit ?? 50)); }}
-                        className="inline-flex items-center gap-1 text-xs font-mono font-semibold text-road hover:text-signal transition-all"
-                        title="Edit limit (0 = unlimited)"
-                      >
-                        {(u.monthly_upload_limit ?? 50) === 0 ? '∞' : u.monthly_upload_limit ?? 50}
-                        <Edit3 size={10} className="text-steel" />
-                      </button>
-                    )}
+
+                  {/* File Upload Limit */}
+                  <td className="px-4 py-4 text-center">
+                    <LimitEditor
+                      userId={u.id}
+                      field="file"
+                      currentLimit={(u as any).file_upload_limit ?? 2}
+                      currentUsed={(u as any).file_uploads_used ?? 0}
+                      editing={editingFileLimit}
+                      setEditing={setEditingFileLimit}
+                      value={fileLimitValue}
+                      setValue={setFileLimitValue}
+                      onSave={handleSaveFileLimit}
+                      icon={FileUp}
+                      label="file"
+                    />
                   </td>
-                  <td className="px-5 py-4 text-right font-mono font-semibold text-road">{u.loadCount}</td>
-                  <td className="px-5 py-4 text-right font-mono font-semibold text-road">{u.invoiceCount}</td>
+
+                  <td className="px-4 py-4 text-right font-mono font-semibold text-road">{u.loadCount}</td>
+                  <td className="px-4 py-4 text-right font-mono font-semibold text-road">{u.invoiceCount}</td>
 
                   {/* Actions */}
-                  <td className="px-5 py-4 text-right">
+                  <td className="px-4 py-4 text-right">
                     <div className="flex items-center gap-1.5 justify-end flex-wrap">
                       {(u.status === 'pending' || u.status === 'suspended') && (
                         <button

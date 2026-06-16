@@ -21,7 +21,9 @@ export function MinimalTemplate({
   const { totalGrossRevenue, dispatchFee } = calcTotals(loads, company.dispatchPercentage);
   const weLabel = weekLabel.replace('Week of ', 'W/E ').split('–')[1]?.trim() ?? weekLabel;
 
-  const paymentMethod = company.zelle
+  const paymentMethod = company.cashApp
+    ? `Cash App: ${company.cashApp}`
+    : company.zelle
     ? `Zelle: ${company.zelle}`
     : company.payoneer
     ? `Payoneer: ${company.payoneer}`
@@ -52,15 +54,10 @@ export function MinimalTemplate({
             <img src={company.companyLogo} alt="Logo" style={{ height: '45px', width: 'auto', objectFit: 'contain' }} />
           )}
           <div>
-            <div style={{ fontSize: '20px', fontWeight: '800', letterSpacing: '-0.5px', textTransform: 'uppercase' }}>
-              {company.companyName || 'Dispatch Services'}
+            <div style={{ fontSize: '18px', fontWeight: '800', letterSpacing: '-0.3px', textTransform: 'uppercase' }}>
+              {company.companyHeaderText || company.companyName || 'Dispatch Services'}
             </div>
-            {company.companyHeaderText && (
-              <div style={{ fontSize: '10px', color: '#64748b', fontWeight: 500, marginTop: '2px' }}>
-                {company.companyHeaderText}
-              </div>
-            )}
-            <div style={{ color: '#666', marginTop: '2px' }}>Dispatch Fee Invoice</div>
+            <div style={{ color: '#666', marginTop: '2px', fontSize: '11px' }}>Dispatch Fee Invoice</div>
           </div>
         </div>
         <div style={{ fontFamily: 'monospace', fontSize: '13px', textAlign: 'right' }}>
@@ -149,10 +146,15 @@ export function MinimalTemplate({
       </div>
 
       {/* Payment Details */}
-      {(company.zelle || company.payoneer || company.bankInformation || company.paymentInstructions) && (
+      {(company.cashApp || company.zelle || company.payoneer || company.bankInformation || company.paymentInstructions) && (
         <div style={{ padding: '16px', border: '1px solid #eee', background: '#fafafa', borderRadius: '4px' }}>
           <div style={{ fontWeight: '700', textTransform: 'uppercase', fontSize: '10px', color: '#999', marginBottom: '8px' }}>Payment Options</div>
           <div style={{ color: '#333', lineHeight: '1.5' }}>{paymentMethod}</div>
+          {company.accountHolderName && (
+            <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #eee', fontSize: '11px', color: '#555' }}>
+              <span style={{ fontWeight: 600 }}>Account Holder: </span>{company.accountHolderName}
+            </div>
+          )}
         </div>
       )}
     </div>

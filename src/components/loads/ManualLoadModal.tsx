@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
-import type { Load } from '../types';
+import type { Load } from '../../types';
 
 interface ManualLoadModalProps {
   open: boolean;

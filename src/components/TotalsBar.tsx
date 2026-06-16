@@ -1,16 +1,20 @@
 import { formatCurrency } from '../lib/calc';
-import { Truck, DollarSign, Percent } from 'lucide-react';
+import { Truck, DollarSign, Percent, TrendingUp, TrendingDown } from 'lucide-react';
 
 interface TotalsBarProps {
   totalGrossRevenue: number;
   dispatchFee: number;
   dispatchPercentage: number;
   loadCount: number;
+  totalPaid?: number;
+  totalUnpaid?: number;
 }
 
-export function TotalsBar({ totalGrossRevenue, dispatchFee, dispatchPercentage, loadCount }: TotalsBarProps) {
+export function TotalsBar({ totalGrossRevenue, dispatchFee, dispatchPercentage, loadCount, totalPaid, totalUnpaid }: TotalsBarProps) {
+  const showPaymentStats = totalPaid !== undefined || totalUnpaid !== undefined;
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div className={`grid grid-cols-1 sm:grid-cols-3 ${showPaymentStats ? 'lg:grid-cols-5' : ''} gap-4`}>
       {/* Total Loads Card */}
       <div className="bg-white border border-steel/10 rounded-2xl p-5 shadow-card hover:shadow-panel transition-all duration-300 flex items-center justify-between">
         <div>
@@ -43,6 +47,32 @@ export function TotalsBar({ totalGrossRevenue, dispatchFee, dispatchPercentage, 
           <Percent size={18} />
         </div>
       </div>
+
+      {/* Total Paid Card */}
+      {showPaymentStats && (
+        <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 shadow-card hover:shadow-panel transition-all duration-300 flex items-center justify-between">
+          <div>
+            <div className="text-xxs font-bold text-emerald-700 uppercase tracking-widest mb-1.5">Total Paid</div>
+            <div className="text-3xl font-extrabold text-emerald-700">{formatCurrency(totalPaid ?? 0)}</div>
+          </div>
+          <div className="w-11 h-11 bg-emerald-100 border border-emerald-200 rounded-xl flex items-center justify-center text-emerald-600 shrink-0">
+            <TrendingUp size={18} />
+          </div>
+        </div>
+      )}
+
+      {/* Total Unpaid Card */}
+      {showPaymentStats && (
+        <div className="bg-red-50 border border-red-200 rounded-2xl p-5 shadow-card hover:shadow-panel transition-all duration-300 flex items-center justify-between">
+          <div>
+            <div className="text-xxs font-bold text-red-700 uppercase tracking-widest mb-1.5">Total Unpaid</div>
+            <div className="text-3xl font-extrabold text-red-700">{formatCurrency(totalUnpaid ?? 0)}</div>
+          </div>
+          <div className="w-11 h-11 bg-red-100 border border-red-200 rounded-xl flex items-center justify-center text-red-500 shrink-0">
+            <TrendingDown size={18} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

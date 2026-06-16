@@ -7,14 +7,16 @@ import { ManualLoadModal } from '../components/loads/ManualLoadModal';
 import type { Load, CompanySettings, CarrierSettings } from '../types';
 import type { Profile } from '../lib/supabase';
 import { calcTotals } from '../lib/calc';
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { fetchUserInvoices } from '../lib/invoices';
 
 interface DashboardPageProps {
   loads: Load[];
   company: CompanySettings;
   carrier: CarrierSettings;
   profile: Profile | null;
-  canUpload: boolean;
+  canUploadFile: boolean;
+  canAddManual: boolean;
   onLoadExtracted: (load: Load) => void | Promise<void>;
   onManualLoad: (load: Omit<Load, 'id'>) => void | Promise<void>;
   onRemoveLoad: (id: string) => void;
@@ -26,7 +28,8 @@ export function DashboardPage({
   company,
   carrier,
   profile,
-  canUpload,
+  canUploadFile,
+  canAddManual,
   onLoadExtracted,
   onManualLoad,
   onRemoveLoad,
@@ -35,17 +38,46 @@ export function DashboardPage({
   const { totalGrossRevenue, dispatchFee } = calcTotals(loads, company.dispatchPercentage);
   const [lastAdded, setLastAdded] = useState<string | null>(null);
   const [manualOpen, setManualOpen] = useState(false);
+  const [totalPaid, setTotalPaid] = useState(0);
+  const [totalUnpaid, setTotalUnpaid] = useState(0);
+
+  const loadInvoiceStats = useCallback(async () => {
+    if (!profile) return;
+    try {
+      const invoices = await fetchUserInvoices(profile.id);
+      let paid = 0, unpaid = 0;
+      for (const inv of invoices) {
+        const fee = Number(inv.dispatch_fee) || 0;
+        if (inv.status === 'paid') paid += fee;
+        else unpaid += fee;
+      }
+      setTotalPaid(paid);
+      setTotalUnpaid(unpaid);
+    } catch (e) {
+      console.error('Failed to fetch invoice stats:', e);
+    }
+  }, [profile]);
+
+  useEffect(() => { loadInvoiceStats(); }, [loadInvoiceStats]);
 
   const isPending = profile?.status === 'pending';
   const isSuspended = profile?.status === 'suspended';
-  const limit = profile?.monthly_upload_limit ?? 50;
-  const used = profile?.uploads_used ?? 0;
-  const quotaExceeded = limit > 0 && used >= limit;
 
-  let disabledMessage = '';
-  if (isPending) disabledMessage = 'Your account is awaiting admin approval.';
-  else if (isSuspended) disabledMessage = 'Your account has been suspended. Contact admin.';
-  else if (quotaExceeded) disabledMessage = `Monthly upload limit reached (${used}/${limit}).`;
+  // Split limits
+  const manualLimit = profile?.manual_load_limit ?? 2;
+  const manualUsed = profile?.manual_loads_used ?? 0;
+  const fileLimit = profile?.file_upload_limit ?? 2;
+  const fileUsed = profile?.file_uploads_used ?? 0;
+
+  let fileDisabledMessage = '';
+  if (isPending) fileDisabledMessage = 'Your account is awaiting admin approval.';
+  else if (isSuspended) fileDisabledMessage = 'Your account has been suspended. Contact admin.';
+  else if (!canUploadFile) fileDisabledMessage = `File upload limit reached (${fileUsed}/${fileLimit}). Contact admin.`;
+
+  let manualDisabledMessage = '';
+  if (isPending) manualDisabledMessage = 'Your account is awaiting admin approval.';
+  else if (isSuspended) manualDisabledMessage = 'Your account has been suspended. Contact admin.';
+  else if (!canAddManual) manualDisabledMessage = `Manual load limit reached (${manualUsed}/${manualLimit}). Contact admin.`;
 
   const handleExtracted = async (load: Load) => {
     await onLoadExtracted(load);
@@ -54,6 +86,10 @@ export function DashboardPage({
   };
 
   const handleManual = async (data: Omit<Load, 'id'>) => {
+    if (!canAddManual) {
+      alert(manualDisabledMessage || 'You cannot add manual loads at this time.');
+      return;
+    }
     await onManualLoad(data);
     setLastAdded(data.loadNumber || 'Load');
     setTimeout(() => setLastAdded(null), 3000);
@@ -99,10 +135,17 @@ export function DashboardPage({
         </div>
       )}
 
-      {quotaExceeded && !isPending && !isSuspended && (
+      {!isPending && !isSuspended && !canUploadFile && (
         <div className="bg-orange-50 border border-orange-200 text-orange-700 rounded-2xl p-4 text-xs font-semibold flex items-center gap-2.5 shadow-card">
           <AlertTriangle size={16} className="shrink-0 text-orange-600" />
-          <span>Monthly upload limit reached ({used}/{limit}). Contact admin to increase your limit.</span>
+          <span>File upload limit reached ({fileUsed}/{fileLimit}). Contact admin to increase your limit.</span>
+        </div>
+      )}
+
+      {!isPending && !isSuspended && !canAddManual && (
+        <div className="bg-orange-50 border border-orange-200 text-orange-700 rounded-2xl p-4 text-xs font-semibold flex items-center gap-2.5 shadow-card">
+          <AlertTriangle size={16} className="shrink-0 text-orange-600" />
+          <span>Manual load limit reached ({manualUsed}/{manualLimit}). Contact admin to increase your limit.</span>
         </div>
       )}
 
@@ -123,15 +166,22 @@ export function DashboardPage({
           <h2 className="text-sm font-bold text-ink uppercase tracking-wider">Upload Rate Confirmation</h2>
           <button
             onClick={() => setManualOpen(true)}
-            className="flex items-center gap-1.5 text-xs font-bold text-signal bg-signal/5 border border-signal/15 hover:bg-signal hover:text-white px-3.5 py-2 rounded-xl transition-all"
+            disabled={!canAddManual}
+            className={`flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl transition-all ${
+              canAddManual
+                ? 'text-signal bg-signal/5 border border-signal/15 hover:bg-signal hover:text-white'
+                : 'text-steel/50 bg-steel/5 border border-steel/10 cursor-not-allowed'
+            }`}
+            title={!canAddManual ? manualDisabledMessage : 'Add a load manually'}
           >
             <Plus size={14} /> Manual Load Entry
           </button>
         </div>
-        <UploadZone onLoadExtracted={handleExtracted} disabled={!canUpload} disabledMessage={disabledMessage} />
+        <UploadZone onLoadExtracted={handleExtracted} disabled={!canUploadFile} disabledMessage={fileDisabledMessage} />
         {profile && profile.status === 'approved' && (
-          <div className="text-xs text-steel font-medium text-right mt-1">
-            Uploads this month: {used} / {limit === 0 ? '∞' : limit}
+          <div className="flex flex-col sm:flex-row justify-end gap-3 mt-1 text-xs text-steel font-medium">
+            <span>File Uploads: {fileUsed} / {fileLimit === 0 ? '∞' : fileLimit}</span>
+            <span>Manual Loads: {manualUsed} / {manualLimit === 0 ? '∞' : manualLimit}</span>
           </div>
         )}
       </div>
@@ -142,6 +192,8 @@ export function DashboardPage({
         dispatchFee={dispatchFee}
         dispatchPercentage={company.dispatchPercentage}
         loadCount={loads.length}
+        totalPaid={totalPaid}
+        totalUnpaid={totalUnpaid}
       />
 
       {/* Table Section */}

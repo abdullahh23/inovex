@@ -12,6 +12,8 @@ const defaultCompany: CompanySettings = {
   zelle: '',
   payoneer: '',
   bankInformation: '',
+  cashApp: '',
+  accountHolderName: '',
   dispatchPercentage: 10,
   templateId: 'classic',
   companyLogo: '',

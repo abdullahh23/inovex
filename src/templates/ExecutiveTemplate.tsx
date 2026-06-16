@@ -21,7 +21,9 @@ export function ExecutiveTemplate({
   const { totalGrossRevenue, dispatchFee } = calcTotals(loads, company.dispatchPercentage);
   const weLabel = weekLabel.replace('Week of ', 'W/E ').split('–')[1]?.trim() ?? weekLabel;
 
-  const paymentMethod = company.zelle
+  const paymentMethod = company.cashApp
+    ? `Cash App: ${company.cashApp}`
+    : company.zelle
     ? `Zelle Account: ${company.zelle}`
     : company.payoneer
     ? `Payoneer Account: ${company.payoneer}`
@@ -54,14 +56,12 @@ export function ExecutiveTemplate({
             <img src={company.companyLogo} alt="Logo" style={{ height: '50px', width: 'auto', objectFit: 'contain' }} />
           )}
           <div>
-            <div style={{ fontSize: '24px', fontWeight: '800', letterSpacing: '1px', textTransform: 'uppercase', color: '#ecc94b' }}>
-              {company.companyName || 'DISPATCH LOGISTICS'}
+            <div style={{ fontSize: '20px', fontWeight: '800', letterSpacing: '0.5px', textTransform: 'uppercase', color: '#ecc94b' }}>
+              {company.companyHeaderText || company.companyName || 'DISPATCH LOGISTICS'}
             </div>
-            {company.companyHeaderText && (
-              <div style={{ fontSize: '10px', color: '#a0aec0', fontWeight: 500, marginTop: '2px' }}>
-                {company.companyHeaderText}
-              </div>
-            )}
+            <div style={{ fontSize: '10px', color: '#a0aec0', fontWeight: 500, marginTop: '2px' }}>
+              Dispatch Fee Invoice
+            </div>
           </div>
         </div>
         <div style={{ textAlign: 'right' }}>
@@ -150,6 +150,11 @@ export function ExecutiveTemplate({
             <div style={{ fontSize: '12px', color: '#2d3748', lineHeight: '1.6' }}>
               {paymentMethod}
             </div>
+            {company.accountHolderName && (
+              <div style={{ marginTop: '8px', paddingTop: '8px', borderTop: '1px solid #e2e8f0', fontSize: '11px', color: '#4a5568' }}>
+                <span style={{ fontWeight: 700 }}>Account Holder: </span>{company.accountHolderName}
+              </div>
+            )}
           </div>
 
           {/* Right Side: Totals */}

@@ -3,9 +3,17 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+  }
+
   body {
     @apply text-ink antialiased bg-lane font-sans;
     letter-spacing: -0.01em;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    touch-action: manipulation;
   }
 
   h1, h2, h3, h4, h5, h6 {

@@ -7,7 +7,7 @@ import type { Load } from '../types';
 export function DashboardRoute() {
   const { loads, addLoad, removeLoad, clearLoads } = useAppLoads();
   const { company, carrier } = useAppSettings();
-  const { profile, canUpload, refreshProfile } = useAuth();
+  const { profile, canUploadFile, canAddManual, refreshProfile } = useAuth();
 
   const handleLoadExtracted = async (load: Load) => {
     await addLoad(load, 'extract');
@@ -16,6 +16,7 @@ export function DashboardRoute() {
 
   const handleManualLoad = async (data: Omit<Load, 'id'>) => {
     await addLoad({ ...data, id: generateId() }, 'manual');
+    await refreshProfile();
   };
 
   return (
@@ -24,7 +25,8 @@ export function DashboardRoute() {
       company={company}
       carrier={carrier}
       profile={profile}
-      canUpload={canUpload}
+      canUploadFile={canUploadFile}
+      canAddManual={canAddManual}
       onLoadExtracted={handleLoadExtracted}
       onManualLoad={handleManualLoad}
       onRemoveLoad={id => removeLoad(id).catch(console.error)}
