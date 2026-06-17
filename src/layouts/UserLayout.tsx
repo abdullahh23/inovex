@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Truck, LayoutDashboard, FileText, Settings, LogOut, Shield, Menu, X, ChevronLeft, ChevronRight, Sun, Moon, History } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { DataProvider, useAppLoads } from '../contexts/DataContext';
+import { PrivacyModal } from '../components/PrivacyModal';
 
 function UserLayoutInner() {
   const { signOut, profile, isAdmin } = useAuth();
@@ -145,6 +146,15 @@ function UserLayoutInner() {
           <LogOut size={16} className="shrink-0" />
           {!collapsed && <span>Sign Out</span>}
         </button>
+
+        {/* Security Badge */}
+        {!collapsed && (
+          <div className="text-center pt-2 border-t border-steel/8">
+            <p className="text-[8px] text-steel/40 leading-relaxed font-medium">
+              Protected by AWS · Secured by SSL
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -214,6 +224,9 @@ function UserLayoutInner() {
           </motion.div>
         </main>
       </div>
+
+      {/* First-login Privacy Modal */}
+      <PrivacyModal />
     </div>
   );
 }
