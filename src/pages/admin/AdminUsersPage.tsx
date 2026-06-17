@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { fetchAdminUsers, approveUser, suspendUser, updateUserManualLimit, updateUserFileLimit, setUserDisabled } from '../../lib/invoices';
+import { fetchAdminUsers, suspendUser, updateUserManualLimit, updateUserFileLimit, setUserDisabled } from '../../lib/invoices';
 import { useAuth } from '../../contexts/AuthContext';
-import { Users, AlertCircle, RefreshCw, Search, CheckCircle, XCircle, Edit3, Save, FileUp, PenLine } from 'lucide-react';
+import { Users, AlertCircle, RefreshCw, Search, XCircle, Edit3, Save, FileUp, PenLine } from 'lucide-react';
 
 type AdminUser = Awaited<ReturnType<typeof fetchAdminUsers>>[number];
 
@@ -27,14 +27,7 @@ export function AdminUsersPage() {
 
   useEffect(() => { load(); }, []);
 
-  const handleApprove = async (userId: string) => {
-    try {
-      await approveUser(userId, user?.id ?? '');
-      load();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Approval failed.');
-    }
-  };
+
 
   const handleSuspend = async (userId: string) => {
     try {
@@ -259,16 +252,7 @@ export function AdminUsersPage() {
                   {/* Actions */}
                   <td className="px-4 py-4 text-right">
                     <div className="flex items-center gap-1.5 justify-end flex-wrap">
-                      {(u.status === 'pending' || u.status === 'suspended') && (
-                        <button
-                          onClick={() => handleApprove(u.id)}
-                          className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1.5 rounded-xl transition-all border bg-signal/5 text-signal border-signal/20 hover:bg-signal hover:text-white"
-                          title="Approve user"
-                        >
-                          <CheckCircle size={12} /> Approve
-                        </button>
-                      )}
-                      {u.status === 'approved' && u.role !== 'admin' && (
+                      {u.role !== 'admin' && !u.is_disabled && (
                         <button
                           onClick={() => handleSuspend(u.id)}
                           className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1.5 rounded-xl transition-all border bg-red-50 text-red-600 border-red-100 hover:bg-red-600 hover:text-white"
