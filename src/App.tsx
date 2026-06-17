@@ -7,6 +7,7 @@ import { LoginPage } from './pages/auth/LoginPage';
 import { SignupPage } from './pages/auth/SignupPage';
 import { ForgotPasswordPage } from './pages/auth/ForgotPasswordPage';
 import { VerifyEmailPage } from './pages/auth/VerifyEmailPage';
+import { ResetPasswordPage } from './pages/auth/ResetPasswordPage';
 import { DashboardRoute } from './pages/DashboardRoute';
 import { InvoiceRoute } from './pages/InvoiceRoute';
 import { SettingsRoute } from './pages/SettingsRoute';
@@ -22,6 +23,7 @@ export function App() {
         <Route path="/signup" element={<AuthRoute><SignupPage /></AuthRoute>} />
         <Route path="/forgot-password" element={<AuthRoute><ForgotPasswordPage /></AuthRoute>} />
         <Route path="/verify-email" element={<VerifyEmailRoute><VerifyEmailPage /></VerifyEmailRoute>} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
 
         <Route element={<ProtectedRoute><UserLayout /></ProtectedRoute>}>
           <Route path="/dashboard" element={<DashboardRoute />} />
