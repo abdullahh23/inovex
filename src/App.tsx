@@ -14,6 +14,7 @@ import { SettingsRoute } from './pages/SettingsRoute';
 import { CarrierHistoryRoute } from './pages/CarrierHistoryRoute';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { AdminUsersPage } from './pages/admin/AdminUsersPage';
+import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
 
 export function App() {
   return (
@@ -24,6 +25,7 @@ export function App() {
         <Route path="/forgot-password" element={<AuthRoute><ForgotPasswordPage /></AuthRoute>} />
         <Route path="/verify-email" element={<VerifyEmailRoute><VerifyEmailPage /></VerifyEmailRoute>} />
         <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/privacy" element={<PrivacyPolicyPage />} />
 
         <Route element={<ProtectedRoute><UserLayout /></ProtectedRoute>}>
           <Route path="/dashboard" element={<DashboardRoute />} />
