@@ -4,6 +4,7 @@ import { UploadZone } from '../components/UploadZone';
 import { LoadTable } from '../components/LoadTable';
 import { TotalsBar } from '../components/TotalsBar';
 import { ManualLoadModal } from '../components/loads/ManualLoadModal';
+import { MotivationalSlider } from '../components/MotivationalSlider';
 import type { Load, CompanySettings, CarrierSettings } from '../types';
 import type { Profile } from '../lib/supabase';
 import { calcTotals } from '../lib/calc';
@@ -119,6 +120,9 @@ export function DashboardPage({
           <span>Carrier information is not set. Go to Settings to add carrier details.</span>
         </div>
       )}
+
+      {/* Motivational Slider */}
+      <MotivationalSlider />
 
       {/* Approval Status Banners */}
       {isPending && (

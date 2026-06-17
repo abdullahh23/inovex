@@ -136,7 +136,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error?.message ?? null };
   };
 
-  // Default to 'approved' if status column doesn't exist yet (migration not run)
+  // Default to 'approved' — new users no longer need admin approval
   const userStatus = profile?.status || 'approved';
   const isAdminUser = profile?.role === 'admin' && !profile?.is_disabled;
   const isPending = !isAdminUser && userStatus === 'pending';
