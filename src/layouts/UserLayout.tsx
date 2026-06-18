@@ -17,6 +17,18 @@ function UserLayoutInner() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
+  // Allow onboarding tour to open/close mobile sidebar
+  useEffect(() => {
+    const openSidebar = () => setMobileOpen(true);
+    const closeSidebar = () => setMobileOpen(false);
+    window.addEventListener('tour:open-sidebar', openSidebar);
+    window.addEventListener('tour:close-sidebar', closeSidebar);
+    return () => {
+      window.removeEventListener('tour:open-sidebar', openSidebar);
+      window.removeEventListener('tour:close-sidebar', closeSidebar);
+    };
+  }, []);
+
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme') === 'dark');
   
   useEffect(() => {
