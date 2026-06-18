@@ -20,7 +20,11 @@ export function LoginPage() {
     const { error: err, role } = await signIn(email, password);
     setLoading(false);
     if (err) {
-      setError(err);
+      if (err.toLowerCase().includes('not confirmed')) {
+        setError('Please check your email inbox or spam/junk folder and click the verification link to confirm your email before signing in.');
+      } else {
+        setError(err);
+      }
       return;
     }
     if (from) {
