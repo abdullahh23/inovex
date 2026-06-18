@@ -28,6 +28,11 @@ export function VerifyEmailPage() {
         <p className="text-steel text-sm">
           We sent a verification link to <strong className="text-ink">{user?.email}</strong>
         </p>
+        <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 text-left">
+          <p className="text-xs text-amber-800 font-semibold">
+            Can't find the email? Check your spam or junk folder. If it's there, mark it as "Not Spam" to receive future emails in your inbox.
+          </p>
+        </div>
         {message && <p className="text-signal text-sm">{message}</p>}
         {error && <p className="text-red-600 text-sm">{error}</p>}
         <AuthButton loading={loading} onClick={handleResend}>Resend Verification Email</AuthButton>
