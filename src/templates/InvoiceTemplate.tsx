@@ -10,6 +10,7 @@ interface InvoiceTemplateProps {
   carrier: CarrierSettings;
   invoiceNumber: string;
   invoiceDate: string;
+  dueDate?: string;
   weekLabel: string;
 }
 
@@ -27,6 +28,7 @@ function ClassicTemplate({
   carrier,
   invoiceNumber,
   invoiceDate,
+  dueDate,
   weekLabel,
 }: InvoiceTemplateProps) {
   const { totalGrossRevenue, dispatchFee } = calcTotals(loads, company.dispatchPercentage);
@@ -87,7 +89,7 @@ function ClassicTemplate({
             </tr>
             <tr>
               <td style={{ color: GRAY_LABEL, paddingRight: '20px' }}>Due Date</td>
-              <td style={{ fontWeight: '700', color: NAVY, textAlign: 'right' }}>{formatDate(invoiceDate)}</td>
+              <td style={{ fontWeight: '700', color: NAVY, textAlign: 'right' }}>{formatDate(dueDate || invoiceDate)}</td>
             </tr>
           </tbody>
         </table>

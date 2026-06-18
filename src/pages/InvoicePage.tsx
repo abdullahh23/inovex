@@ -1,4 +1,4 @@
-import { Printer, LayoutTemplate, Download } from 'lucide-react';
+import { Printer, LayoutTemplate, Download, CalendarClock } from 'lucide-react';
 import { downloadInvoicePDF } from '../lib/pdf';
 import { InvoiceTemplate } from '../templates/InvoiceTemplate';
 import type { Load, CompanySettings, CarrierSettings } from '../types';
@@ -9,6 +9,8 @@ interface InvoicePageProps {
   carrier: CarrierSettings;
   invoiceNumber: string;
   invoiceDate: string;
+  dueDate: string;
+  onDueDateChange: (date: string) => void;
   weekLabel: string;
   onPrint: () => void;
   onTemplateChange?: (templateId: string) => void;
@@ -20,6 +22,8 @@ export function InvoicePage({
   carrier,
   invoiceNumber,
   invoiceDate,
+  dueDate,
+  onDueDateChange,
   weekLabel,
   onPrint,
   onTemplateChange,
@@ -65,6 +69,18 @@ export function InvoicePage({
             </select>
           </div>
 
+          {/* Due Date Picker */}
+          <div className="flex items-center gap-2 bg-lane border border-steel/15 px-3 py-1.5 rounded-xl">
+            <CalendarClock size={16} className="text-signal shrink-0" />
+            <span className="text-[10px] font-semibold text-steel whitespace-nowrap">Due:</span>
+            <input
+              type="date"
+              value={dueDate}
+              onChange={e => onDueDateChange(e.target.value)}
+              className="bg-transparent text-xs font-semibold text-ink focus:outline-none cursor-pointer"
+            />
+          </div>
+
           {/* Print Button */}
           <button
             onClick={onPrint}
@@ -93,6 +109,7 @@ export function InvoicePage({
             carrier={carrier}
             invoiceNumber={invoiceNumber}
             invoiceDate={invoiceDate}
+            dueDate={dueDate}
             weekLabel={weekLabel}
           />
         </div>

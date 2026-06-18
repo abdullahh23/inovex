@@ -7,6 +7,7 @@ interface TemplateProps {
   carrier: CarrierSettings;
   invoiceNumber: string;
   invoiceDate: string;
+  dueDate?: string;
   weekLabel: string;
 }
 
@@ -16,6 +17,7 @@ export function MinimalTemplate({
   carrier,
   invoiceNumber,
   invoiceDate,
+  dueDate,
   weekLabel,
 }: TemplateProps) {
   const { totalGrossRevenue, dispatchFee } = calcTotals(loads, company.dispatchPercentage);
@@ -63,6 +65,7 @@ export function MinimalTemplate({
         <div style={{ fontFamily: 'monospace', fontSize: '13px', textAlign: 'right' }}>
           <div>INV: {invoiceNumber}</div>
           <div style={{ color: '#666', marginTop: '2px' }}>Date: {formatDate(invoiceDate)}</div>
+          <div style={{ color: '#666', marginTop: '2px' }}>Due: {formatDate(dueDate || invoiceDate)}</div>
         </div>
       </div>
 

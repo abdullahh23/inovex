@@ -7,6 +7,7 @@ interface TemplateProps {
   carrier: CarrierSettings;
   invoiceNumber: string;
   invoiceDate: string;
+  dueDate?: string;
   weekLabel: string;
 }
 
@@ -16,6 +17,7 @@ export function ExecutiveTemplate({
   carrier,
   invoiceNumber,
   invoiceDate,
+  dueDate,
   weekLabel,
 }: TemplateProps) {
   const { totalGrossRevenue, dispatchFee } = calcTotals(loads, company.dispatchPercentage);
@@ -76,7 +78,7 @@ export function ExecutiveTemplate({
         {/* Dates Info Bar */}
         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 20px', background: '#f7fafc', borderLeft: '4px solid #ecc94b', marginBottom: '30px' }}>
           <div><strong>Invoice Date:</strong> {formatDate(invoiceDate)}</div>
-          <div><strong>Due Date:</strong> {formatDate(invoiceDate)}</div>
+          <div><strong>Due Date:</strong> {formatDate(dueDate || invoiceDate)}</div>
           <div><strong>Billing Period:</strong> {weLabel}</div>
         </div>
 

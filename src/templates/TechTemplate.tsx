@@ -7,6 +7,7 @@ interface TemplateProps {
   carrier: CarrierSettings;
   invoiceNumber: string;
   invoiceDate: string;
+  dueDate?: string;
   weekLabel: string;
 }
 
@@ -16,6 +17,7 @@ export function TechTemplate({
   carrier,
   invoiceNumber,
   invoiceDate,
+  dueDate,
   weekLabel,
 }: TemplateProps) {
   const { totalGrossRevenue, dispatchFee } = calcTotals(loads, company.dispatchPercentage);
@@ -78,6 +80,10 @@ export function TechTemplate({
               <tr>
                 <td style={{ color: '#64748b', paddingBottom: '6px' }}>Issued</td>
                 <td style={{ textAlign: 'right', fontWeight: '600', color: '#0f172a', paddingBottom: '6px' }}>{formatDate(invoiceDate)}</td>
+              </tr>
+              <tr>
+                <td style={{ color: '#64748b', paddingBottom: '6px' }}>Due</td>
+                <td style={{ textAlign: 'right', fontWeight: '600', color: '#0f172a', paddingBottom: '6px' }}>{formatDate(dueDate || invoiceDate)}</td>
               </tr>
               <tr>
                 <td style={{ color: '#64748b' }}>Period</td>

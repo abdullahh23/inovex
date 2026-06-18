@@ -17,6 +17,11 @@ export function InvoiceRoute() {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }, []);
+  const [dueDate, setDueDate] = useState(() => {
+    const d = new Date();
+    d.setDate(d.getDate() + 7);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  });
   const weekLabel = useMemo(() => getCurrentWeekLabel(), []);
 
   const handlePrint = async () => {
@@ -57,6 +62,8 @@ export function InvoiceRoute() {
         carrier={carrier}
         invoiceNumber={invoiceNumber}
         invoiceDate={invoiceDate}
+        dueDate={dueDate}
+        onDueDateChange={setDueDate}
         weekLabel={weekLabel}
         onPrint={handlePrint}
         onTemplateChange={handleTemplateChange}
