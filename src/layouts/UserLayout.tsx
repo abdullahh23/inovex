@@ -90,6 +90,7 @@ function UserLayoutInner() {
               key={item.to}
               to={item.to}
               onClick={() => setMobileOpen(false)}
+              data-tour={`nav-${item.to.replace('/', '')}`}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${
                   isActive
