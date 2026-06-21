@@ -1,5 +1,4 @@
 # Load to Cash — robots.txt
-# Allow all search engine crawlers
 
 User-agent: *
 Allow: /
@@ -7,12 +6,12 @@ Allow: /login
 Allow: /signup
 Allow: /privacy
 
-# Block dashboard pages (private, no need to index)
+# Block private dashboard pages
 Disallow: /dashboard
 Disallow: /invoice
 Disallow: /settings
 Disallow: /carrier-history
 Disallow: /admin
 
-# Sitemap location
-Sitemap: https://loadtocash.up.railway.app/sitemap.xml
+# Sitemap
+Sitemap: https://loadtocash.online/sitemap.xml
