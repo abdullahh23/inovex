@@ -5,7 +5,7 @@ import { rowToLoad, loadToRow } from '../lib/db-mappers';
 import { useAuth } from '../contexts/AuthContext';
 
 export function useLoads() {
-  const { user } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const [loads, setLoads] = useState<Load[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -52,6 +52,8 @@ export function useLoads() {
         .from('profiles')
         .update({ [counterField]: currentVal + 1 })
         .eq('id', user.id);
+      // Refresh profile so dashboard shows updated remaining count
+      await refreshProfile();
     } catch (e) {
       console.error('Failed to increment upload counter:', e);
     }

@@ -27,7 +27,7 @@ $$;
 -- FIX H5: Prevent users from updating sensitive columns
 -- Users should NOT be able to change: role, status, approved_at,
 -- approved_by, monthly_upload_limit, uploads_used, uploads_reset_at,
--- manual_load_limit, manual_loads_used, file_upload_limit, file_uploads_used
+-- manual_load_limit, file_upload_limit (NOT _used counters — users must increment those)
 -- ============================================================
 CREATE OR REPLACE FUNCTION public.prevent_role_escalation()
 RETURNS trigger
@@ -43,17 +43,13 @@ BEGIN
     NEW.approved_at := OLD.approved_at;
     NEW.approved_by := OLD.approved_by;
     NEW.monthly_upload_limit := OLD.monthly_upload_limit;
-    NEW.uploads_used := OLD.uploads_used;
     NEW.uploads_reset_at := OLD.uploads_reset_at;
-    -- Also protect the split limit columns if they exist
+    -- Protect limit columns (but NOT _used counters — users increment those)
     IF TG_TABLE_NAME = 'profiles' THEN
       BEGIN
         NEW.manual_load_limit := OLD.manual_load_limit;
-        NEW.manual_loads_used := OLD.manual_loads_used;
         NEW.file_upload_limit := OLD.file_upload_limit;
-        NEW.file_uploads_used := OLD.file_uploads_used;
       EXCEPTION WHEN undefined_column THEN
-        -- Columns don't exist yet, skip
         NULL;
       END;
     END IF;
