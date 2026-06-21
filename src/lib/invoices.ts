@@ -102,7 +102,7 @@ export async function fetchAdminUsers() {
       status: 'approved',
       monthly_upload_limit: 50,
       uploads_used: 0,
-      manual_load_limit: 10,
+      manual_load_limit: 15,
       file_upload_limit: 20,
       phone: null,
       manual_loads_used: 0,

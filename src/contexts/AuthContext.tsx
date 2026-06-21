@@ -147,7 +147,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const quotaExceeded = isApproved && limit > 0 && used >= limit;
 
   // Split limits
-  const manualLimit = profile?.manual_load_limit ?? 10;
+  const manualLimit = profile?.manual_load_limit ?? 15;
   const manualUsed = profile?.manual_loads_used ?? 0;
   const fileLimit = profile?.file_upload_limit ?? 20;
   const fileUsed = profile?.file_uploads_used ?? 0;

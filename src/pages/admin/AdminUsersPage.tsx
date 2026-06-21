@@ -212,7 +212,7 @@ export function AdminUsersPage() {
                   {/* Manual Load Limit */}
                   <td className="px-4 py-4 text-center">
                     <LimitEditor
-                      userId={u.id} currentLimit={(u as any).manual_load_limit ?? 10}
+                      userId={u.id} currentLimit={(u as any).manual_load_limit ?? 15}
                       currentUsed={(u as any).manual_loads_used ?? 0}
                       editing={editingManualLimit} setEditing={setEditingManualLimit}
                       onSave={handleSaveManualLimit} icon={PenLine} label="manual"
