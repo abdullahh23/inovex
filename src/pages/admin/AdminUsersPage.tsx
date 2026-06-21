@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
-import { fetchAdminUsers, suspendUser, updateUserManualLimit, updateUserFileLimit, setUserDisabled, deleteUser } from '../../lib/invoices';
+import { fetchAdminUsers, suspendUser, approveUser, updateUserManualLimit, updateUserFileLimit, deleteUser } from '../../lib/invoices';
 import { useAuth } from '../../contexts/AuthContext';
-import { Users, AlertCircle, RefreshCw, Search, XCircle, Edit3, Save, FileUp, PenLine, Trash2 } from 'lucide-react';
-
+import { AlertCircle, RefreshCw, Search, CheckCircle, XCircle, Edit3, Save, FileUp, PenLine, Trash2 } from 'lucide-react';
 
 type AdminUser = Awaited<ReturnType<typeof fetchAdminUsers>>[number];
 
@@ -13,12 +12,11 @@ export function AdminUsersPage() {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [editingManualLimit, setEditingManualLimit] = useState<string | null>(null);
-  const [editingFileLimit, setEditingFileLimit]   = useState<string | null>(null);
-  const [manualLimitValue, setManualLimitValue]   = useState('');
-  const [fileLimitValue, setFileLimitValue]       = useState('');
-  const [confirmDeleteId, setConfirmDeleteId]     = useState<string | null>(null);
-  const [deleting, setDeleting]                   = useState(false);
-
+  const [editingFileLimit, setEditingFileLimit]     = useState<string | null>(null);
+  const [manualLimitValue, setManualLimitValue]     = useState('');
+  const [fileLimitValue, setFileLimitValue]         = useState('');
+  const [confirmDeleteId, setConfirmDeleteId]       = useState<string | null>(null);
+  const [deleting, setDeleting]                     = useState(false);
 
   const load = () => {
     setLoading(true);
@@ -31,24 +29,14 @@ export function AdminUsersPage() {
 
   useEffect(() => { load(); }, []);
 
-
-
   const handleSuspend = async (userId: string) => {
-    try {
-      await suspendUser(userId);
-      load();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Suspend failed.');
-    }
+    try { await suspendUser(userId); load(); }
+    catch (e) { setError(e instanceof Error ? e.message : 'Suspend failed.'); }
   };
 
-  const handleToggleDisabled = async (u: AdminUser) => {
-    try {
-      await setUserDisabled(u.id, !u.is_disabled);
-      load();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Update failed.');
-    }
+  const handleApprove = async (userId: string) => {
+    try { await approveUser(userId, user?.id ?? ''); load(); }
+    catch (e) { setError(e instanceof Error ? e.message : 'Approve failed.'); }
   };
 
   const handleDeleteUser = async (userId: string) => {
@@ -58,7 +46,7 @@ export function AdminUsersPage() {
       setConfirmDeleteId(null);
       load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Delete failed. Make sure SUPABASE_SERVICE_ROLE_KEY is set on the server.');
+      setError(e instanceof Error ? e.message : 'Delete failed. Add SUPABASE_SERVICE_ROLE_KEY to Railway env.');
     } finally {
       setDeleting(false);
     }
@@ -67,31 +55,21 @@ export function AdminUsersPage() {
   const handleSaveManualLimit = async (userId: string) => {
     try {
       const val = parseInt(manualLimitValue, 10);
-      if (isNaN(val) || val < 0) {
-        setError('Limit must be a positive number (0 = unlimited).');
-        return;
-      }
+      if (isNaN(val) || val < 0) { setError('Limit must be a positive number (0 = unlimited).'); return; }
       await updateUserManualLimit(userId, val);
       setEditingManualLimit(null);
       load();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Update failed.');
-    }
+    } catch (e) { setError(e instanceof Error ? e.message : 'Update failed.'); }
   };
 
   const handleSaveFileLimit = async (userId: string) => {
     try {
       const val = parseInt(fileLimitValue, 10);
-      if (isNaN(val) || val < 0) {
-        setError('Limit must be a positive number (0 = unlimited).');
-        return;
-      }
+      if (isNaN(val) || val < 0) { setError('Limit must be a positive number (0 = unlimited).'); return; }
       await updateUserFileLimit(userId, val);
       setEditingFileLimit(null);
       load();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Update failed.');
-    }
+    } catch (e) { setError(e instanceof Error ? e.message : 'Update failed.'); }
   };
 
   const filtered = users.filter(u => {
@@ -101,11 +79,11 @@ export function AdminUsersPage() {
 
   const statusBadge = (status: string) => {
     const map: Record<string, { bg: string; text: string; dot: string; label: string }> = {
-      pending: { bg: 'bg-amber-50 border-amber-200', text: 'text-amber-700', dot: 'bg-amber-500', label: 'Pending' },
-      approved: { bg: 'bg-green-50 border-green-200', text: 'text-green-700', dot: 'bg-green-500', label: 'Approved' },
-      suspended: { bg: 'bg-red-50 border-red-200', text: 'text-red-700', dot: 'bg-red-500', label: 'Suspended' },
+      pending:   { bg: 'bg-amber-50 border-amber-200',  text: 'text-amber-700',  dot: 'bg-amber-500',  label: 'Pending'   },
+      approved:  { bg: 'bg-green-50 border-green-200',  text: 'text-green-700',  dot: 'bg-green-500',  label: 'Approved'  },
+      suspended: { bg: 'bg-red-50 border-red-200',      text: 'text-red-700',    dot: 'bg-red-500',    label: 'Suspended' },
     };
-    const s = map[status] || map.pending;
+    const s = map[status] || map.approved;
     return (
       <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold border ${s.bg} ${s.text}`}>
         <span className={`w-1.5 h-1.5 rounded-full ${s.dot}`} />
@@ -114,8 +92,8 @@ export function AdminUsersPage() {
     );
   };
 
-  const LimitEditor = ({ userId, field, currentLimit, currentUsed, editing, setEditing, value, setValue, onSave, icon: Icon, label }: {
-    userId: string; field: string; currentLimit: number; currentUsed: number;
+  const LimitEditor = ({ userId, currentLimit, currentUsed, editing, setEditing, value, setValue, onSave, icon: Icon, label }: {
+    userId: string; currentLimit: number; currentUsed: number;
     editing: string | null; setEditing: (v: string | null) => void;
     value: string; setValue: (v: string) => void;
     onSave: (id: string) => void; icon: any; label: string;
@@ -124,9 +102,7 @@ export function AdminUsersPage() {
       return (
         <div className="flex items-center gap-1 justify-center">
           <input
-            type="number"
-            min="0"
-            value={value}
+            type="number" min="0" value={value}
             onChange={e => setValue(e.target.value)}
             className="w-14 px-1.5 py-1 text-xs border border-steel/20 rounded-lg text-center focus:outline-none focus:ring-1 focus:ring-signal"
             autoFocus
@@ -158,11 +134,7 @@ export function AdminUsersPage() {
           <h1 className="text-2xl font-extrabold text-ink font-outfit">User Accounts</h1>
           <p className="text-steel text-sm mt-0.5">Manage accounts, approvals, and load limits.</p>
         </div>
-        <button
-          onClick={load}
-          className="p-2 text-steel hover:text-signal hover:bg-lane rounded-xl transition-all"
-          title="Refresh User Data"
-        >
+        <button onClick={load} className="p-2 text-steel hover:text-signal hover:bg-lane rounded-xl transition-all" title="Refresh User Data">
           <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
         </button>
       </div>
@@ -232,34 +204,22 @@ export function AdminUsersPage() {
                   {/* Manual Load Limit */}
                   <td className="px-4 py-4 text-center">
                     <LimitEditor
-                      userId={u.id}
-                      field="manual"
-                      currentLimit={(u as any).manual_load_limit ?? 2}
+                      userId={u.id} currentLimit={(u as any).manual_load_limit ?? 2}
                       currentUsed={(u as any).manual_loads_used ?? 0}
-                      editing={editingManualLimit}
-                      setEditing={setEditingManualLimit}
-                      value={manualLimitValue}
-                      setValue={setManualLimitValue}
-                      onSave={handleSaveManualLimit}
-                      icon={PenLine}
-                      label="manual"
+                      editing={editingManualLimit} setEditing={setEditingManualLimit}
+                      value={manualLimitValue} setValue={setManualLimitValue}
+                      onSave={handleSaveManualLimit} icon={PenLine} label="manual"
                     />
                   </td>
 
                   {/* File Upload Limit */}
                   <td className="px-4 py-4 text-center">
                     <LimitEditor
-                      userId={u.id}
-                      field="file"
-                      currentLimit={(u as any).file_upload_limit ?? 2}
+                      userId={u.id} currentLimit={(u as any).file_upload_limit ?? 2}
                       currentUsed={(u as any).file_uploads_used ?? 0}
-                      editing={editingFileLimit}
-                      setEditing={setEditingFileLimit}
-                      value={fileLimitValue}
-                      setValue={setFileLimitValue}
-                      onSave={handleSaveFileLimit}
-                      icon={FileUp}
-                      label="file"
+                      editing={editingFileLimit} setEditing={setEditingFileLimit}
+                      value={fileLimitValue} setValue={setFileLimitValue}
+                      onSave={handleSaveFileLimit} icon={FileUp} label="file"
                     />
                   </td>
 
@@ -269,27 +229,29 @@ export function AdminUsersPage() {
                   {/* Actions */}
                   <td className="px-4 py-4 text-right">
                     <div className="flex items-center gap-1.5 justify-end flex-wrap">
-                      {u.role !== 'admin' && !u.is_disabled && (
-                        <button
-                          onClick={() => handleSuspend(u.id)}
-                          className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1.5 rounded-xl transition-all border bg-red-50 text-red-600 border-red-100 hover:bg-red-600 hover:text-white"
-                          title="Suspend user"
-                        >
-                          <XCircle size={12} /> Suspend
-                        </button>
-                      )}
                       {u.role !== 'admin' && (
-                        <button
-                          onClick={() => handleToggleDisabled(u)}
-                          className={`text-[10px] font-bold px-2.5 py-1.5 rounded-xl transition-all border ${
-                            u.is_disabled
-                              ? 'bg-signal/5 text-signal border-signal/20 hover:bg-signal hover:text-white'
-                              : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-600 hover:text-white'
-                          }`}
-                        >
-                          {u.is_disabled ? 'Enable' : 'Disable'}
-                        </button>
+                        u.status === 'suspended' || u.is_disabled ? (
+                          /* Suspended → Approve button (green) */
+                          <button
+                            onClick={() => handleApprove(u.id)}
+                            className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1.5 rounded-xl transition-all border bg-green-50 text-green-700 border-green-200 hover:bg-green-600 hover:text-white"
+                            title="Approve / Re-enable user"
+                          >
+                            <CheckCircle size={12} /> Approve
+                          </button>
+                        ) : (
+                          /* Active → Suspend button (amber) */
+                          <button
+                            onClick={() => handleSuspend(u.id)}
+                            className="inline-flex items-center gap-1 text-[10px] font-bold px-2.5 py-1.5 rounded-xl transition-all border bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-600 hover:text-white"
+                            title="Suspend user"
+                          >
+                            <XCircle size={12} /> Suspend
+                          </button>
+                        )
                       )}
+
+                      {/* Delete — always visible for non-admins */}
                       {u.role !== 'admin' && (
                         confirmDeleteId === u.id ? (
                           <div className="flex items-center gap-1">
@@ -319,7 +281,6 @@ export function AdminUsersPage() {
                         )
                       )}
                     </div>
-
                   </td>
                 </tr>
               ))}
