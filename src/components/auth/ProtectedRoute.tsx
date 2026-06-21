@@ -3,18 +3,10 @@ import { useAuth } from '../../contexts/AuthContext';
 import type { ReactNode } from 'react';
 
 export function VerifyEmailRoute({ children }: { children: ReactNode }) {
-  const { session, loading } = useAuth();
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-lane">
-        <div className="w-8 h-8 border-2 border-signal border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-  if (!session) return <Navigate to="/login" replace />;
-  if (session.user.email_confirmed_at) return <Navigate to="/dashboard" replace />;
-  return <>{children}</>;
+  // Email verification removed — redirect straight to dashboard
+  return <Navigate to="/dashboard" replace />;
 }
+
 
 export function ProtectedRoute({ children }: { children: ReactNode }) {
   const { session, profile, loading } = useAuth();
@@ -32,9 +24,7 @@ export function ProtectedRoute({ children }: { children: ReactNode }) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (session.user && !session.user.email_confirmed_at) {
-    return <Navigate to="/verify-email" replace />;
-  }
+  // Email verification NOT required — user can access dashboard right after signup
 
   if (profile?.is_disabled) {
     return <Navigate to="/login" replace />;
@@ -71,7 +61,8 @@ export function AuthRoute({ children }: { children: ReactNode }) {
     );
   }
 
-  if (session?.user?.email_confirmed_at) {
+  // If already logged in → redirect to dashboard (no email check needed)
+  if (session?.user) {
     return <Navigate to={isAdmin ? '/admin' : '/dashboard'} replace />;
   }
 
