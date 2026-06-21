@@ -266,6 +266,15 @@ app.post('/api/extract',
 const distPath = path.resolve(__dirname, '..', 'dist');
 const distPath2 = path.resolve(__dirname, '..', '..', 'dist');
 const finalDistPath = fs.existsSync(distPath) ? distPath : distPath2;
+
+// Serve public folder (sitemap.xml, robots.txt, favicon.svg)
+const publicPath = path.resolve(__dirname, '..', 'public');
+const publicPath2 = path.resolve(__dirname, '..', '..', 'public');
+const finalPublicPath = fs.existsSync(publicPath) ? publicPath : publicPath2;
+if (fs.existsSync(finalPublicPath)) {
+  app.use(express.static(finalPublicPath));
+}
+
 app.use(express.static(finalDistPath));
 app.get('/{*path}', (_req, res) => {
   res.sendFile(path.join(finalDistPath, 'index.html'));
