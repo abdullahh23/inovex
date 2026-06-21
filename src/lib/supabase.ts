@@ -13,6 +13,7 @@ export type Profile = {
   id: string;
   email: string;
   full_name: string | null;
+  phone: string | null;
   role: 'user' | 'admin';
   is_disabled: boolean;
   status: 'pending' | 'approved' | 'suspended';

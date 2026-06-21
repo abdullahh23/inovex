@@ -86,14 +86,14 @@ export async function fetchAdminUsers() {
 
   const fullQuery = await supabase
     .from('profiles')
-    .select('id, email, full_name, role, is_disabled, status, monthly_upload_limit, uploads_used, manual_load_limit, file_upload_limit, manual_loads_used, file_uploads_used, approved_at, created_at')
+    .select('id, email, full_name, phone, role, is_disabled, status, monthly_upload_limit, uploads_used, manual_load_limit, file_upload_limit, manual_loads_used, file_uploads_used, approved_at, created_at')
     .order('created_at', { ascending: false });
 
   if (fullQuery.error) {
     // Fallback: new columns don't exist yet
     const basicQuery = await supabase
       .from('profiles')
-      .select('id, email, full_name, role, is_disabled, created_at')
+      .select('id, email, full_name, phone, role, is_disabled, created_at')
       .order('created_at', { ascending: false });
     
     if (basicQuery.error) throw new Error(basicQuery.error.message);
@@ -102,8 +102,9 @@ export async function fetchAdminUsers() {
       status: 'approved',
       monthly_upload_limit: 50,
       uploads_used: 0,
-      manual_load_limit: 2,
-      file_upload_limit: 2,
+      manual_load_limit: 10,
+      file_upload_limit: 20,
+      phone: null,
       manual_loads_used: 0,
       file_uploads_used: 0,
       approved_at: null,

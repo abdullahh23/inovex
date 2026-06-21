@@ -7,7 +7,7 @@ interface AuthContextValue {
   user: User | null;
   profile: Profile | null;
   loading: boolean;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: string | null }>;
+  signUp: (email: string, password: string, fullName: string, phone?: string) => Promise<{ error: string | null }>;
   signIn: (email: string, password: string) => Promise<{ error: string | null; role?: 'user' | 'admin' }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: string | null }>;
@@ -91,11 +91,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, fullName: string) => {
+  const signUp = async (email: string, password: string, fullName: string, phone?: string) => {
     const { error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { full_name: fullName } },
+      options: { data: { full_name: fullName, phone: phone || '' } },
     });
     return { error: error?.message ?? null };
   };
@@ -147,9 +147,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const quotaExceeded = isApproved && limit > 0 && used >= limit;
 
   // Split limits
-  const manualLimit = profile?.manual_load_limit ?? 2;
+  const manualLimit = profile?.manual_load_limit ?? 10;
   const manualUsed = profile?.manual_loads_used ?? 0;
-  const fileLimit = profile?.file_upload_limit ?? 2;
+  const fileLimit = profile?.file_upload_limit ?? 20;
   const fileUsed = profile?.file_uploads_used ?? 0;
   const manualQuotaExceeded = isApproved && manualLimit > 0 && manualUsed >= manualLimit;
   const fileQuotaExceeded = isApproved && fileLimit > 0 && fileUsed >= fileLimit;

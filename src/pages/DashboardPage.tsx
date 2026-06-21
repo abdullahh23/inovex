@@ -65,20 +65,20 @@ export function DashboardPage({
   const isSuspended = profile?.status === 'suspended';
 
   // Split limits
-  const manualLimit = profile?.manual_load_limit ?? 2;
+  const manualLimit = profile?.manual_load_limit ?? 10;
   const manualUsed = profile?.manual_loads_used ?? 0;
-  const fileLimit = profile?.file_upload_limit ?? 2;
+  const fileLimit = profile?.file_upload_limit ?? 20;
   const fileUsed = profile?.file_uploads_used ?? 0;
 
   let fileDisabledMessage = '';
   if (isPending) fileDisabledMessage = 'Your account is awaiting admin approval.';
   else if (isSuspended) fileDisabledMessage = 'Your account has been suspended. Contact admin.';
-  else if (!canUploadFile) fileDisabledMessage = `File upload limit reached (${fileUsed}/${fileLimit}). Contact admin.`;
+  else if (!canUploadFile) fileDisabledMessage = `File upload limit reached (${fileUsed}/${fileLimit}). Contact support on WhatsApp for more credits.`;
 
   let manualDisabledMessage = '';
   if (isPending) manualDisabledMessage = 'Your account is awaiting admin approval.';
   else if (isSuspended) manualDisabledMessage = 'Your account has been suspended. Contact admin.';
-  else if (!canAddManual) manualDisabledMessage = `Manual load limit reached (${manualUsed}/${manualLimit}). Contact admin.`;
+  else if (!canAddManual) manualDisabledMessage = `Manual load limit reached (${manualUsed}/${manualLimit}). Contact support on WhatsApp for more credits.`;
 
   const handleExtracted = async (load: Load) => {
     await onLoadExtracted(load);
@@ -140,16 +140,43 @@ export function DashboardPage({
       )}
 
       {!isPending && !isSuspended && !canUploadFile && (
-        <div className="bg-orange-50 border border-orange-200 text-orange-700 rounded-2xl p-4 text-xs font-semibold flex items-center gap-2.5 shadow-card">
-          <AlertTriangle size={16} className="shrink-0 text-orange-600" />
-          <span>File upload limit reached ({fileUsed}/{fileLimit}). Contact admin to increase your limit.</span>
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-2xl p-4 text-xs font-semibold flex items-center gap-2.5 shadow-card">
+          <AlertTriangle size={16} className="shrink-0 text-red-600" />
+          <span>
+            File upload limit reached ({fileUsed}/{fileLimit}). 
+            <a href="https://wa.me/16023451572" target="_blank" rel="noopener noreferrer" className="text-signal font-bold underline ml-1">Contact support on WhatsApp</a> for more credits.
+          </span>
         </div>
       )}
 
       {!isPending && !isSuspended && !canAddManual && (
-        <div className="bg-orange-50 border border-orange-200 text-orange-700 rounded-2xl p-4 text-xs font-semibold flex items-center gap-2.5 shadow-card">
-          <AlertTriangle size={16} className="shrink-0 text-orange-600" />
-          <span>Manual load limit reached ({manualUsed}/{manualLimit}). Contact admin to increase your limit.</span>
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-2xl p-4 text-xs font-semibold flex items-center gap-2.5 shadow-card">
+          <AlertTriangle size={16} className="shrink-0 text-red-600" />
+          <span>
+            Manual load limit reached ({manualUsed}/{manualLimit}). 
+            <a href="https://wa.me/16023451572" target="_blank" rel="noopener noreferrer" className="text-signal font-bold underline ml-1">Contact support on WhatsApp</a> for more credits.
+          </span>
+        </div>
+      )}
+
+      {/* Low credits warning */}
+      {!isPending && !isSuspended && canUploadFile && fileLimit > 0 && (fileLimit - fileUsed) <= 5 && (
+        <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl p-4 text-xs font-semibold flex items-center gap-2.5 shadow-card">
+          <AlertTriangle size={16} className="shrink-0 text-amber-600" />
+          <span>
+            ⚠️ Only {fileLimit - fileUsed} file upload{(fileLimit - fileUsed) !== 1 ? 's' : ''} remaining! 
+            <a href="https://wa.me/16023451572" target="_blank" rel="noopener noreferrer" className="text-signal font-bold underline ml-1">Contact support on WhatsApp</a> for more credits.
+          </span>
+        </div>
+      )}
+
+      {!isPending && !isSuspended && canAddManual && manualLimit > 0 && (manualLimit - manualUsed) <= 3 && (
+        <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl p-4 text-xs font-semibold flex items-center gap-2.5 shadow-card">
+          <AlertTriangle size={16} className="shrink-0 text-amber-600" />
+          <span>
+            ⚠️ Only {manualLimit - manualUsed} manual load{(manualLimit - manualUsed) !== 1 ? 's' : ''} remaining! 
+            <a href="https://wa.me/16023451572" target="_blank" rel="noopener noreferrer" className="text-signal font-bold underline ml-1">Contact support on WhatsApp</a> for more credits.
+          </span>
         </div>
       )}
 
@@ -183,9 +210,15 @@ export function DashboardPage({
         </div>
         <UploadZone onLoadExtracted={handleExtracted} disabled={!canUploadFile} disabledMessage={fileDisabledMessage} />
         {profile && profile.status === 'approved' && (
-          <div className="flex flex-col sm:flex-row justify-end gap-3 mt-1 text-xs text-steel font-medium">
-            <span>File Uploads: {fileUsed} / {fileLimit === 0 ? '∞' : fileLimit}</span>
-            <span>Manual Loads: {manualUsed} / {manualLimit === 0 ? '∞' : manualLimit}</span>
+          <div className="flex flex-col sm:flex-row justify-end gap-3 mt-1 text-xs font-semibold">
+            <span className={`${fileLimit > 0 && (fileLimit - fileUsed) <= 5 ? 'text-amber-600' : 'text-steel'}`}>
+              📁 File Uploads: {fileUsed} / {fileLimit === 0 ? '∞' : fileLimit}
+              {fileLimit > 0 && <span className="text-steel/60 ml-1">({fileLimit - fileUsed} remaining)</span>}
+            </span>
+            <span className={`${manualLimit > 0 && (manualLimit - manualUsed) <= 3 ? 'text-amber-600' : 'text-steel'}`}>
+              ✏️ Manual Loads: {manualUsed} / {manualLimit === 0 ? '∞' : manualLimit}
+              {manualLimit > 0 && <span className="text-steel/60 ml-1">({manualLimit - manualUsed} remaining)</span>}
+            </span>
           </div>
         )}
       </div>

@@ -165,11 +165,12 @@ export function AdminUsersPage() {
             {search ? 'No users match your search.' : 'No users registered yet.'}
           </div>
         ) : (
-          <table className="w-full min-w-[900px] text-sm border-collapse">
+          <table className="w-full min-w-[1000px] text-sm border-collapse">
             <thead>
               <tr className="bg-lane/50 border-b border-steel/10 text-steel text-[11px] font-bold uppercase tracking-wider">
                 <th className="px-4 py-4 text-left">Email</th>
                 <th className="px-4 py-4 text-left">Name</th>
+                <th className="px-4 py-4 text-left">Phone</th>
                 <th className="px-4 py-4 text-left">Role</th>
                 <th className="px-4 py-4 text-left">Status</th>
                 <th className="px-4 py-4 text-center">
@@ -188,6 +189,15 @@ export function AdminUsersPage() {
                 <tr key={u.id} className="hover:bg-lane/30 transition-all">
                   <td className="px-4 py-4 font-semibold text-ink text-xs">{u.email}</td>
                   <td className="px-4 py-4 text-road font-medium">{u.full_name || '—'}</td>
+                  <td className="px-4 py-4 text-road text-xs">
+                    {(u as any).phone ? (
+                      <a href={`https://wa.me/${(u as any).phone.replace(/[^0-9]/g, '')}`}
+                         target="_blank" rel="noopener noreferrer"
+                         className="text-signal hover:underline">
+                        {(u as any).phone}
+                      </a>
+                    ) : '—'}
+                  </td>
                   <td className="px-4 py-4">
                     <span className={`px-2 py-0.5 rounded-full text-[9px] font-extrabold border ${
                       u.role === 'admin'
@@ -202,7 +212,7 @@ export function AdminUsersPage() {
                   {/* Manual Load Limit */}
                   <td className="px-4 py-4 text-center">
                     <LimitEditor
-                      userId={u.id} currentLimit={(u as any).manual_load_limit ?? 2}
+                      userId={u.id} currentLimit={(u as any).manual_load_limit ?? 10}
                       currentUsed={(u as any).manual_loads_used ?? 0}
                       editing={editingManualLimit} setEditing={setEditingManualLimit}
                       onSave={handleSaveManualLimit} icon={PenLine} label="manual"
@@ -212,7 +222,7 @@ export function AdminUsersPage() {
                   {/* File Upload Limit */}
                   <td className="px-4 py-4 text-center">
                     <LimitEditor
-                      userId={u.id} currentLimit={(u as any).file_upload_limit ?? 2}
+                      userId={u.id} currentLimit={(u as any).file_upload_limit ?? 20}
                       currentUsed={(u as any).file_uploads_used ?? 0}
                       editing={editingFileLimit} setEditing={setEditingFileLimit}
                       onSave={handleSaveFileLimit} icon={FileUp} label="file"

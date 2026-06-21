@@ -7,6 +7,7 @@ import { isValidEmail, isStrongPassword, sanitizeName, checkRateLimit, formatRat
 export function SignupPage() {
   const [fullName, setFullName] = useState('');
   const [email, setEmail]       = useState('');
+  const [phone, setPhone]       = useState('');
   const [password, setPassword] = useState('');
   const [error, setError]       = useState<string | null>(null);
   const [loading, setLoading]   = useState(false);
@@ -48,7 +49,7 @@ export function SignupPage() {
     setLoading(true);
 
     // ── Sign up ──
-    const { error: signUpErr } = await signUp(email.trim().toLowerCase(), password, cleanName);
+    const { error: signUpErr } = await signUp(email.trim().toLowerCase(), password, cleanName, phone.trim());
     if (signUpErr) {
       setLoading(false);
       setError(signUpErr);
@@ -90,6 +91,16 @@ export function SignupPage() {
           autoComplete="email"
           maxLength={254}
           placeholder="john@example.com"
+        />
+        <AuthInput
+          label="Phone Number"
+          type="tel"
+          value={phone}
+          onChange={e => setPhone(e.target.value)}
+          required
+          autoComplete="tel"
+          maxLength={20}
+          placeholder="+1 (555) 123-4567"
         />
         <AuthInput
           label="Password"
