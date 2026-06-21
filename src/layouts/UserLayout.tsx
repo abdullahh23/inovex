@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Truck, LayoutDashboard, FileText, Settings, LogOut, Shield, Menu, X, ChevronLeft, ChevronRight, Sun, Moon, History } from 'lucide-react';
+import { Truck, LayoutDashboard, FileText, Settings, LogOut, Shield, Menu, X, ChevronLeft, ChevronRight, Sun, Moon, History, MessageCircle, Phone, Mail, Headphones } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { DataProvider, useAppLoads } from '../contexts/DataContext';
 import { PrivacyModal } from '../components/PrivacyModal';
@@ -12,6 +12,7 @@ function UserLayoutInner() {
   const { loads } = useAppLoads();
   const navigate = useNavigate();
   const [loggingOut, setLoggingOut] = useState(false);
+  const [contactOpen, setContactOpen] = useState(false);
   
   // Responsive sidebar states
   const [collapsed, setCollapsed] = useState(false);
@@ -243,6 +244,113 @@ function UserLayoutInner() {
       <PrivacyModal />
       {/* Step-by-step onboarding tour */}
       <OnboardingTour />
+
+      {/* ── Floating Contact / Support Widget ── */}
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end gap-3 no-print">
+        <AnimatePresence>
+          {contactOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: 16, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 16, scale: 0.9 }}
+              transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+              className="bg-white border border-steel/10 rounded-2xl shadow-2xl shadow-ink/10 overflow-hidden w-72"
+            >
+              {/* Header */}
+              <div className="bg-signal px-5 py-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 bg-white/20 rounded-xl flex items-center justify-center">
+                    <Headphones size={18} className="text-white" />
+                  </div>
+                  <div>
+                    <div className="text-white font-bold text-sm">Need Assistance?</div>
+                    <div className="text-teal-100 text-xs">We typically reply within minutes</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Contact options */}
+              <div className="p-4 space-y-2">
+                {/* WhatsApp */}
+                <a
+                  href="https://wa.me/16023451572"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-3 p-3 rounded-xl bg-green-50 hover:bg-green-100 border border-green-200 transition-all group"
+                >
+                  <div className="w-9 h-9 bg-green-500 rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+                    <MessageCircle size={18} className="text-white" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-black text-green-800">WhatsApp Chat</div>
+                    <div className="text-[11px] text-green-600">+1 (602) 345-1572</div>
+                  </div>
+                  <div className="ml-auto">
+                    <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                  </div>
+                </a>
+
+                {/* Phone */}
+                <a
+                  href="tel:+16023451528"
+                  className="flex items-center gap-3 p-3 rounded-xl bg-lane hover:bg-signal/5 border border-steel/10 hover:border-signal/30 transition-all group"
+                >
+                  <div className="w-9 h-9 bg-signal/10 border border-signal/20 rounded-xl flex items-center justify-center shrink-0 group-hover:bg-signal group-hover:text-white transition-all">
+                    <Phone size={16} className="text-signal group-hover:text-white" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-ink">Main Office</div>
+                    <div className="text-[11px] text-steel">(602) 345-1528</div>
+                  </div>
+                </a>
+
+                {/* Email */}
+                <a
+                  href="mailto:Nickindispatch@gmail.com"
+                  className="flex items-center gap-3 p-3 rounded-xl bg-lane hover:bg-signal/5 border border-steel/10 hover:border-signal/30 transition-all group"
+                >
+                  <div className="w-9 h-9 bg-signal/10 border border-signal/20 rounded-xl flex items-center justify-center shrink-0 group-hover:bg-signal transition-all">
+                    <Mail size={16} className="text-signal group-hover:text-white" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-ink">Email Us</div>
+                    <div className="text-[11px] text-steel">Nickindispatch@gmail.com</div>
+                  </div>
+                </a>
+              </div>
+
+              <div className="px-4 pb-4">
+                <div className="text-[10px] text-center text-steel/60">Mon–Fri · 9 AM – 6 PM EST</div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Toggle FAB button */}
+        <motion.button
+          onClick={() => setContactOpen(v => !v)}
+          whileHover={{ scale: 1.08 }}
+          whileTap={{ scale: 0.95 }}
+          className="w-14 h-14 bg-signal hover:bg-teal-500 text-white rounded-2xl shadow-xl shadow-signal/40 flex items-center justify-center transition-colors relative"
+          title="Contact Support"
+        >
+          <AnimatePresence mode="wait">
+            {contactOpen ? (
+              <motion.div key="close" initial={{ rotate: -90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: 90, opacity: 0 }} transition={{ duration: 0.2 }}>
+                <X size={22} />
+              </motion.div>
+            ) : (
+              <motion.div key="open" initial={{ rotate: 90, opacity: 0 }} animate={{ rotate: 0, opacity: 1 }} exit={{ rotate: -90, opacity: 0 }} transition={{ duration: 0.2 }}>
+                <MessageCircle size={22} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+          {/* Pulse ring when closed */}
+          {!contactOpen && (
+            <span className="absolute inset-0 rounded-2xl animate-ping bg-signal/30 pointer-events-none" />
+          )}
+        </motion.button>
+      </div>
     </div>
   );
 }

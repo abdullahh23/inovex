@@ -1,5 +1,6 @@
 import { useState, useMemo } from 'react';
-import { Search, ChevronUp, ChevronDown, Eye, Trash2, ArrowUpDown, TrendingUp, TrendingDown, X, ChevronRight, Truck } from 'lucide-react';
+import { Search, ChevronUp, ChevronDown, Eye, Trash2, ArrowUpDown, TrendingUp, TrendingDown, X, ChevronRight, Truck, FileText } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { formatCurrency, formatDate } from '../lib/calc';
 import type { CarrierHistory } from '../types';
 
@@ -33,6 +34,7 @@ export function CarrierHistoryPage({ invoices, loading, onToggleStatus, onDelete
   const [sortDir, setSortDir] = useState<SortDir>('desc');
   const [expandedInvoice, setExpandedInvoice] = useState<string | null>(null);
   const [selectedCarrier, setSelectedCarrier] = useState<string | null>(null);
+  const [previewInvoice, setPreviewInvoice] = useState<InvoiceRow | null>(null);
 
   // Compute carrier stats
   const carrierStats = useMemo(() => {
@@ -413,6 +415,13 @@ export function CarrierHistoryPage({ invoices, loading, onToggleStatus, onDelete
                             <Eye size={14} />
                           </button>
                           <button
+                            onClick={() => setPreviewInvoice(inv)}
+                            className="p-1.5 text-steel hover:text-amberline hover:bg-amberline/5 rounded-lg transition-all"
+                            title="Preview invoice"
+                          >
+                            <FileText size={14} />
+                          </button>
+                          <button
                             onClick={() => handleDelete(inv.id)}
                             className="p-1.5 text-steel hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
                             title="Delete"
@@ -446,6 +455,144 @@ export function CarrierHistoryPage({ invoices, loading, onToggleStatus, onDelete
           </table>
         </div>
       </div>
+
+      {/* Invoice Preview Modal */}
+      <AnimatePresence>
+        {previewInvoice && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={() => setPreviewInvoice(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-white rounded-2xl shadow-2xl overflow-hidden w-full max-w-2xl max-h-[90vh] flex flex-col"
+            >
+              {/* Modal Header */}
+              <div className="flex items-center justify-between px-6 py-4 bg-ink border-b border-steel/10 shrink-0">
+                <div>
+                  <h3 className="text-white font-bold text-sm">{previewInvoice.invoice_number}</h3>
+                  <p className="text-steel text-xs mt-0.5">
+                    {previewInvoice.carrier_name || (previewInvoice.carrier_snapshot as any)?.carrierName || 'Unknown Carrier'} · {new Date(previewInvoice.invoice_date).toLocaleDateString()}
+                  </p>
+                </div>
+                <button onClick={() => setPreviewInvoice(null)} className="p-2 text-steel hover:text-white hover:bg-white/10 rounded-xl transition-all">
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Invoice Content */}
+              <div className="overflow-y-auto flex-1 bg-gray-100 p-6">
+                <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-steel/10" style={{ fontFamily: 'Arial, sans-serif', fontSize: '12px' }}>
+                  {/* Classic invoice layout matching the app's actual invoice */}
+                  {/* Header */}
+                  <div className="bg-slate-800 text-white p-6 flex justify-between items-start">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
+                        <Truck size={20} className="text-white" />
+                      </div>
+                      <div>
+                        <div className="font-black text-lg">{(previewInvoice.carrier_snapshot as any)?.companyName || 'Your Company'}</div>
+                        <div className="text-slate-300 text-xs">Dispatch Fee Invoice</div>
+                      </div>
+                    </div>
+                    <div className="text-right text-sm space-y-1">
+                      <div className="text-slate-300">Invoice # <span className="text-white font-bold">{previewInvoice.invoice_number}</span></div>
+                      <div className="text-slate-300">Invoice Date <span className="text-white">{new Date(previewInvoice.invoice_date).toLocaleDateString()}</span></div>
+                    </div>
+                  </div>
+                  <div className="h-1 bg-gradient-to-r from-signal to-transparent" />
+
+                  {/* Body */}
+                  <div className="p-6 space-y-6" style={{ color: '#0f172a' }}>
+                    {/* From / Bill To */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="border border-steel/15 rounded-lg p-4">
+                        <div className="text-[9px] font-bold text-steel uppercase tracking-widest mb-2">FROM</div>
+                        <div className="font-bold text-ink">{(previewInvoice.carrier_snapshot as any)?.companyName || 'Your Company'}</div>
+                        <div className="text-steel text-xs">Dispatch Services</div>
+                        {(previewInvoice.carrier_snapshot as any)?.email && <div className="text-steel text-xs">{(previewInvoice.carrier_snapshot as any).email}</div>}
+                      </div>
+                      <div className="border border-steel/15 rounded-lg p-4">
+                        <div className="text-[9px] font-bold text-steel uppercase tracking-widest mb-2">BILL TO</div>
+                        <div className="font-bold text-ink">{previewInvoice.carrier_name || (previewInvoice.carrier_snapshot as any)?.carrierName || 'Carrier'}</div>
+                        {(previewInvoice.carrier_snapshot as any)?.carrierEmail && <div className="text-steel text-xs">{(previewInvoice.carrier_snapshot as any).carrierEmail}</div>}
+                        {(previewInvoice.carrier_snapshot as any)?.mcNumber && <div className="text-steel text-xs">MC: {(previewInvoice.carrier_snapshot as any).mcNumber}</div>}
+                      </div>
+                    </div>
+
+                    {/* Loads Table */}
+                    <div>
+                      <div className="text-xs font-bold text-ink uppercase tracking-wider mb-2">WEEKLY LOAD SUMMARY — {new Date(previewInvoice.invoice_date).toLocaleDateString()}</div>
+                      <table className="w-full text-xs">
+                        <thead>
+                          <tr className="bg-slate-800 text-white">
+                            <th className="text-left p-2">#</th>
+                            <th className="text-left p-2">Load #</th>
+                            <th className="text-left p-2">Broker</th>
+                            <th className="text-left p-2">Route</th>
+                            <th className="text-right p-2">Gross Amount</th>
+                          </tr>
+                        </thead>
+                        <tbody style={{ color: '#0f172a' }}>
+                          {(previewInvoice.invoice_loads || []).map((load: any, idx: number) => (
+                            <tr key={load.id} style={{ backgroundColor: idx % 2 === 0 ? '#f9fafb' : '#ffffff' }}>
+                              <td className="p-2" style={{ color: '#64748b' }}>{idx + 1}</td>
+                              <td className="p-2 font-bold" style={{ color: '#0f172a' }}>{load.load_number || '—'}</td>
+                              <td className="p-2" style={{ color: '#0f172a' }}>{load.broker_name || '—'}</td>
+                              <td className="p-2" style={{ color: '#64748b' }}>
+                                {load.origin_city && load.destination_city
+                                  ? `${load.origin_city}, ${load.origin_state} → ${load.destination_city}, ${load.destination_state}`
+                                  : '—'}
+                              </td>
+                              <td className="p-2 text-right font-bold" style={{ color: '#0f172a' }}>{formatCurrency(Number(load.gross_amount))}</td>
+                            </tr>
+                          ))}
+                          <tr style={{ backgroundColor: '#f1f5f9' }}>
+                            <td colSpan={4} className="p-2 text-right font-bold uppercase text-xs" style={{ color: '#0f172a' }}>Total Weekly Gross</td>
+                            <td className="p-2 text-right font-black" style={{ color: '#0f172a' }}>{formatCurrency(Number(previewInvoice.total_gross_revenue))}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* Invoice Summary */}
+                    <div className="space-y-2">
+                      <div className="text-xs font-bold text-ink uppercase tracking-wider mb-3">INVOICE SUMMARY</div>
+                      <div className="flex justify-between text-sm text-steel">
+                        <span>Total Weekly Gross ({previewInvoice.invoice_loads?.length || 0} Load{previewInvoice.invoice_loads?.length !== 1 ? 's' : ''})</span>
+                        <span>{formatCurrency(Number(previewInvoice.total_gross_revenue))}</span>
+                      </div>
+                      <div className="flex justify-between text-sm text-steel">
+                        <span>Dispatch Fee @ 6%</span>
+                        <span>{formatCurrency(Number(previewInvoice.dispatch_fee))}</span>
+                      </div>
+                      <div className="flex justify-between items-center bg-slate-800 text-white rounded-lg px-4 py-3 mt-2">
+                        <span className="font-black uppercase">TOTAL DUE</span>
+                        <span className="font-black text-amberline text-lg">{formatCurrency(Number(previewInvoice.dispatch_fee))}</span>
+                      </div>
+                    </div>
+
+                    {/* Payment info */}
+                    {(previewInvoice.carrier_snapshot as any)?.paymentMethod && (
+                      <div className="border border-steel/15 rounded-lg p-4">
+                        <div className="text-[9px] font-bold text-steel uppercase tracking-widest mb-2">PAYMENT OPTIONS</div>
+                        <div className="text-xs text-ink">{(previewInvoice.carrier_snapshot as any).paymentMethod}: <span className="font-bold">{(previewInvoice.carrier_snapshot as any).paymentDetails}</span></div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

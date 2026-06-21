@@ -15,6 +15,7 @@ import { CarrierHistoryRoute } from './pages/CarrierHistoryRoute';
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { AdminUsersPage } from './pages/admin/AdminUsersPage';
 import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
+import { LandingPage } from './pages/LandingPage';
 
 export function App() {
   return (
@@ -39,7 +40,7 @@ export function App() {
           <Route path="/admin/users" element={<AdminUsersPage />} />
         </Route>
 
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/" element={<LandingPage />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </AuthProvider>
