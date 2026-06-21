@@ -54,7 +54,7 @@ async function requireAuth(req: AuthenticatedRequest, res: express.Response, nex
     res.status(401).json({ success: false, error: 'Unauthorized' });
     return;
   }
-  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, { global: { headers: { Authorization: header } } });
   const { data: { user }, error } = await supabase.auth.getUser(header.slice(7));
   if (error || !user) {
     res.status(401).json({ success: false, error: 'Unauthorized' });
