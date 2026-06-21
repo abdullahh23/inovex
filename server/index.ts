@@ -193,7 +193,7 @@ app.delete('/api/admin/delete-user/:userId',
       return;
     }
 
-    const { userId } = req.params;
+    const userId = String(req.params.userId);
 
     // Prevent admin from deleting themselves
     if (userId === req.userId) {

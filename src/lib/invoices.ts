@@ -167,9 +167,9 @@ export async function deleteUser(userId: string): Promise<void> {
   const { data: { session } } = await supabase.auth.getSession();
   if (!session?.access_token) throw new Error('Not authenticated');
   const apiBase = import.meta.env.VITE_API_URL || '';
-  const res = await fetch(${apiBase}/api/admin/delete-user/, {
+  const res = await fetch(`${apiBase}/api/admin/delete-user/${userId}`, {
     method: 'DELETE',
-    headers: { 'Authorization': Bearer  },
+    headers: { 'Authorization': `Bearer ${session.access_token}` },
   });
   const json = await res.json().catch(() => ({ success: false, error: 'Server error' }));
   if (!json.success) throw new Error(json.error || 'Failed to delete user');
