@@ -1,4 +1,5 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { ProtectedRoute, AdminRoute, AuthRoute, VerifyEmailRoute } from './components/auth/ProtectedRoute';
 import { UserLayout } from './layouts/UserLayout';
@@ -16,33 +17,57 @@ import { AdminDashboardPage } from './pages/admin/AdminDashboardPage';
 import { AdminUsersPage } from './pages/admin/AdminUsersPage';
 import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
 import { LandingPage } from './pages/LandingPage';
+import { TruckLoadingScreen } from './components/TruckLoadingScreen';
 
-export function App() {
+/* ─────────────────────────────────────────────
+   Inner component — has access to useLocation
+───────────────────────────────────────────── */
+function AppContent() {
+  const location = useLocation();
+  const [loading, setLoading] = useState(true);
+
+  // Show truck loader on every route change
+  useEffect(() => {
+    setLoading(true);
+  }, [location.pathname]);
+
   return (
-    <AuthProvider>
+    <>
+      {loading && <TruckLoadingScreen key={location.pathname} onDone={() => setLoading(false)} />}
       <Routes>
-        <Route path="/login" element={<AuthRoute><LoginPage /></AuthRoute>} />
-        <Route path="/signup" element={<AuthRoute><SignupPage /></AuthRoute>} />
+        <Route path="/login"           element={<AuthRoute><LoginPage /></AuthRoute>} />
+        <Route path="/signup"          element={<AuthRoute><SignupPage /></AuthRoute>} />
         <Route path="/forgot-password" element={<AuthRoute><ForgotPasswordPage /></AuthRoute>} />
-        <Route path="/verify-email" element={<VerifyEmailRoute><VerifyEmailPage /></VerifyEmailRoute>} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route path="/privacy" element={<PrivacyPolicyPage />} />
+        <Route path="/verify-email"    element={<VerifyEmailRoute><VerifyEmailPage /></VerifyEmailRoute>} />
+        <Route path="/reset-password"  element={<ResetPasswordPage />} />
+        <Route path="/privacy"         element={<PrivacyPolicyPage />} />
 
         <Route element={<ProtectedRoute><UserLayout /></ProtectedRoute>}>
-          <Route path="/dashboard" element={<DashboardRoute />} />
-          <Route path="/invoice" element={<InvoiceRoute />} />
-          <Route path="/settings" element={<SettingsRoute />} />
+          <Route path="/dashboard"      element={<DashboardRoute />} />
+          <Route path="/invoice"        element={<InvoiceRoute />} />
+          <Route path="/settings"       element={<SettingsRoute />} />
           <Route path="/carrier-history" element={<CarrierHistoryRoute />} />
         </Route>
 
         <Route element={<AdminRoute><AdminLayout /></AdminRoute>}>
-          <Route path="/admin" element={<AdminDashboardPage />} />
+          <Route path="/admin"       element={<AdminDashboardPage />} />
           <Route path="/admin/users" element={<AdminUsersPage />} />
         </Route>
 
-        <Route path="/" element={<LandingPage />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="/"  element={<LandingPage />} />
+        <Route path="*"  element={<Navigate to="/dashboard" replace />} />
       </Routes>
+    </>
+  );
+}
+
+/* ─────────────────────────────────────────────
+   Root App — BrowserRouter is in main.tsx
+───────────────────────────────────────────── */
+export function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
     </AuthProvider>
   );
 }
