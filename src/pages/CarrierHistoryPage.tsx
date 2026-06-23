@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { formatCurrency, formatDate } from '../lib/calc';
 import type { CarrierHistory, Load, CompanySettings, CarrierSettings } from '../types';
 import { InvoiceTemplate } from '../templates/InvoiceTemplate';
+import { printInvoice } from '../lib/pdf';
 
 interface InvoiceRow {
   id: string;
@@ -576,7 +577,7 @@ export function CarrierHistoryPage({ invoices, loading, onToggleStatus, onDelete
                   </div>
                   <div className="flex items-center gap-2">
                     <button
-                      onClick={() => window.print()}
+                      onClick={() => printInvoice()}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-all hover:opacity-80"
                       style={{ background: 'rgba(29,85,176,0.4)', border: '1px solid rgba(29,85,176,0.5)' }}
                     >

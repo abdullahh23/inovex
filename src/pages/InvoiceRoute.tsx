@@ -1,4 +1,5 @@
 import { useMemo, useState, useCallback } from 'react';
+import { flushSync } from 'react-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useAppLoads, useAppSettings } from '../contexts/DataContext';
 import { InvoicePage } from './InvoicePage';
@@ -52,7 +53,13 @@ export function InvoiceRoute() {
       setPendingModalResolve(() => resolve);
       setShowPendingModal(true);
     });
-    setPendingAmount(pending);
+
+    // flushSync forces React to immediately re-render InvoiceTemplate
+    // with the new pendingAmount BEFORE printInvoice() captures outerHTML.
+    // Without this, the print window shows $0 because React batches the update.
+    flushSync(() => {
+      setPendingAmount(pending);
+    });
 
     if (user && loads.length > 0) {
       const shouldSave = await askSaveConfirm();
