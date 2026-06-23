@@ -12,6 +12,7 @@ interface InvoiceTemplateProps {
   invoiceDate: string;
   dueDate?: string;
   weekLabel: string;
+  pendingAmount?: number;
 }
 
 // Colors from the original Classic template
@@ -30,8 +31,10 @@ function ClassicTemplate({
   invoiceDate,
   dueDate,
   weekLabel,
+  pendingAmount = 0,
 }: InvoiceTemplateProps) {
   const { totalGrossRevenue, dispatchFee } = calcTotals(loads, company.dispatchPercentage);
+  const totalDue = dispatchFee + pendingAmount;
   const weLabel = weekLabel.replace('Week of ', 'W/E ').split('–')[1]?.trim() ?? weekLabel;
 
   const paymentMethod = company.cashApp
@@ -46,7 +49,6 @@ function ClassicTemplate({
 
   return (
     <div
-      id="invoice-root"
       style={{
         WebkitPrintColorAdjust: 'exact',
         printColorAdjust: 'exact',
@@ -54,7 +56,8 @@ function ClassicTemplate({
         fontSize: '13px',
         color: TEXT,
         background: '#ffffff',
-        width: '820px',
+        width: '100%',
+        maxWidth: '820px',
         margin: '0 auto',
         padding: '48px 52px',
         boxSizing: 'border-box',
@@ -210,6 +213,14 @@ function ClassicTemplate({
           <span style={{ fontWeight: '600', color: NAVY }}>{formatCurrency(dispatchFee)}</span>
         </div>
 
+        {/* PENDING BALANCE row — only if pendingAmount > 0 */}
+        {pendingAmount > 0 && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: `1px solid ${BORDER}`, background: '#fffbeb' }}>
+            <span style={{ color: '#92400e', fontWeight: 600 }}>⚠ Previous Pending Balance</span>
+            <span style={{ fontWeight: '700', color: '#b45309' }}>{formatCurrency(pendingAmount)}</span>
+          </div>
+        )}
+
         {/* TOTAL DUE bar */}
         <div style={{
           display: 'flex',
@@ -221,7 +232,7 @@ function ClassicTemplate({
           borderRadius: '2px',
         }}>
           <span style={{ color: '#ffffff', fontWeight: '700', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>TOTAL DUE</span>
-          <span style={{ color: GOLD, fontWeight: '800', fontSize: '16px' }}>{formatCurrency(dispatchFee)}</span>
+          <span style={{ color: GOLD, fontWeight: '800', fontSize: '16px' }}>{formatCurrency(totalDue)}</span>
         </div>
       </div>
 
@@ -249,7 +260,7 @@ function ClassicTemplate({
               </span>
             </div>
             <div style={{ fontWeight: '800', fontSize: '22px', color: NAVY }}>
-              {formatCurrency(dispatchFee)}
+              {formatCurrency(totalDue)}
             </div>
           </div>
           {company.accountHolderName && (
@@ -267,15 +278,35 @@ function ClassicTemplate({
 export function InvoiceTemplate(props: InvoiceTemplateProps) {
   const templateId = props.company.templateId || 'classic';
 
-  switch (templateId) {
-    case 'modern':
-      return <MinimalTemplate {...props} />;
-    case 'cargo':
-      return <ExecutiveTemplate {...props} />;
-    case 'teal':
-      return <TechTemplate {...props} />;
-    case 'classic':
-    default:
-      return <ClassicTemplate {...props} />;
-  }
+  const content = (() => {
+    switch (templateId) {
+      case 'modern':
+        return <MinimalTemplate {...props} />;
+      case 'cargo':
+        return <ExecutiveTemplate {...props} />;
+      case 'teal':
+        return <TechTemplate {...props} />;
+      case 'classic':
+      default:
+        return <ClassicTemplate {...props} />;
+    }
+  })();
+
+  // All templates are wrapped in invoice-root so @media print targets them all
+  return (
+    <div
+      id="invoice-root"
+      style={{
+        WebkitPrintColorAdjust: 'exact',
+        printColorAdjust: 'exact',
+        background: '#ffffff',
+        width: '100%',
+        maxWidth: '820px',
+        margin: '0 auto',
+        boxSizing: 'border-box',
+      }}
+    >
+      {content}
+    </div>
+  );
 }

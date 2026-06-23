@@ -14,6 +14,7 @@ interface InvoicePageProps {
   weekLabel: string;
   onPrint: () => void;
   onTemplateChange?: (templateId: string) => void;
+  pendingAmount?: number;
 }
 
 export function InvoicePage({
@@ -27,6 +28,7 @@ export function InvoicePage({
   weekLabel,
   onPrint,
   onTemplateChange,
+  pendingAmount = 0,
 }: InvoicePageProps) {
   const currentTemplate = company.templateId || 'classic';
 
@@ -46,7 +48,7 @@ export function InvoicePage({
   return (
     <div className="space-y-6">
       {/* Action Toolbar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white/80 backdrop-blur-md border border-steel/10 p-4 rounded-2xl shadow-sm no-print">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 p-4 rounded-lg shadow-card no-print">
         <div>
           <h1 className="text-xl font-bold text-ink">Invoice Statements</h1>
           <p className="text-steel text-xs mt-0.5">Customize, preview, and export invoices.</p>
@@ -54,12 +56,12 @@ export function InvoicePage({
 
         <div className="flex flex-wrap items-center gap-3">
           {/* Template Switcher */}
-          <div className="flex items-center gap-2 bg-lane border border-steel/15 px-3 py-1.5 rounded-xl">
+          <div className="flex items-center gap-2 bg-lane dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-3 py-1.5 rounded-lg">
             <LayoutTemplate size={16} className="text-signal" />
             <select
               value={currentTemplate}
               onChange={e => onTemplateChange?.(e.target.value)}
-              className="bg-transparent text-xs font-semibold text-ink focus:outline-none cursor-pointer pr-2"
+              className="bg-transparent text-xs font-semibold text-ink dark:text-gray-200 focus:outline-none cursor-pointer pr-2"
             >
               {templates.map(t => (
                 <option key={t.id} value={t.id}>
@@ -70,14 +72,14 @@ export function InvoicePage({
           </div>
 
           {/* Due Date Picker */}
-          <div className="flex items-center gap-2 bg-lane border border-steel/15 px-3 py-1.5 rounded-xl">
+          <div className="flex items-center gap-2 bg-lane dark:bg-gray-800 border border-gray-200 dark:border-gray-700 px-3 py-1.5 rounded-lg">
             <CalendarClock size={16} className="text-signal shrink-0" />
             <span className="text-[10px] font-semibold text-steel whitespace-nowrap">Due:</span>
             <input
               type="date"
               value={dueDate}
               onChange={e => onDueDateChange(e.target.value)}
-              className="bg-transparent text-xs font-semibold text-ink focus:outline-none cursor-pointer"
+              className="bg-transparent text-xs font-semibold text-ink dark:text-gray-200 focus:outline-none cursor-pointer"
             />
           </div>
 
@@ -100,9 +102,9 @@ export function InvoicePage({
         </div>
       </div>
 
-      {/* Invoice Container with styling box */}
-      <div className="bg-white rounded-2xl shadow-panel border border-steel/10 overflow-x-auto p-4 md:p-8 flex justify-center">
-        <div className="shadow-lg border border-steel/5 rounded-sm bg-white overflow-hidden">
+      {/* Invoice Container */}
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-panel border border-gray-200 dark:border-gray-800 overflow-x-auto p-4 md:p-8 flex justify-center">
+        <div className="shadow-lg border border-gray-200 dark:border-gray-700 rounded-sm bg-white overflow-hidden">
           <InvoiceTemplate
             loads={loads}
             company={company}
@@ -111,6 +113,7 @@ export function InvoicePage({
             invoiceDate={invoiceDate}
             dueDate={dueDate}
             weekLabel={weekLabel}
+            pendingAmount={pendingAmount}
           />
         </div>
       </div>

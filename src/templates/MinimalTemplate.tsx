@@ -9,6 +9,7 @@ interface TemplateProps {
   invoiceDate: string;
   dueDate?: string;
   weekLabel: string;
+  pendingAmount?: number;
 }
 
 export function MinimalTemplate({
@@ -19,8 +20,10 @@ export function MinimalTemplate({
   invoiceDate,
   dueDate,
   weekLabel,
+  pendingAmount = 0,
 }: TemplateProps) {
   const { totalGrossRevenue, dispatchFee } = calcTotals(loads, company.dispatchPercentage);
+  const totalDue = dispatchFee + pendingAmount;
   const weLabel = weekLabel.replace('Week of ', 'W/E ').split('–')[1]?.trim() ?? weekLabel;
 
   const paymentMethod = company.cashApp
@@ -35,7 +38,6 @@ export function MinimalTemplate({
 
   return (
     <div
-      id="invoice-root"
       style={{
         WebkitPrintColorAdjust: 'exact',
         printColorAdjust: 'exact',
@@ -43,7 +45,7 @@ export function MinimalTemplate({
         fontSize: '12px',
         color: '#1a1a1a',
         background: '#ffffff',
-        width: '820px',
+        width: '100%',
         margin: '0 auto',
         padding: '50px 60px',
         boxSizing: 'border-box',
@@ -146,6 +148,18 @@ export function MinimalTemplate({
           <span>Total Fee Due</span>
           <span style={{ fontFamily: 'monospace' }}>{formatCurrency(dispatchFee)}</span>
         </div>
+        {pendingAmount > 0 && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', background: '#fffbeb', marginTop: '4px', borderRadius: '2px' }}>
+            <span style={{ color: '#92400e', fontWeight: 600, fontSize: '12px' }}>⚠ Previous Pending Balance</span>
+            <span style={{ fontFamily: 'monospace', color: '#b45309', fontWeight: '700' }}>{formatCurrency(pendingAmount)}</span>
+          </div>
+        )}
+        {pendingAmount > 0 && (
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderTop: '2px solid #111', fontWeight: '800', fontSize: '14px', marginTop: '4px' }}>
+            <span>TOTAL DUE</span>
+            <span style={{ fontFamily: 'monospace' }}>{formatCurrency(totalDue)}</span>
+          </div>
+        )}
       </div>
 
       {/* Payment Details */}

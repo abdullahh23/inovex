@@ -41,7 +41,7 @@ export function App() {
         </Route>
 
         <Route path="/"  element={<LandingPage />} />
-        <Route path="*"  element={<Navigate to="/dashboard" replace />} />
+        <Route path="*"  element={<Navigate to="/" replace />} />
       </Routes>
     </AuthProvider>
   );

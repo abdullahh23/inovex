@@ -26,7 +26,7 @@ function Field({ label, value, onChange, type = 'text', placeholder = '' }: {
         value={value}
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
-        className="w-full border border-steel/20 rounded-xl px-4 py-2.5 text-sm text-ink bg-white focus:outline-none focus:ring-4 focus:ring-signal/10 focus:border-signal/70 transition-all placeholder:text-steel/45"
+        className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2.5 text-sm text-ink dark:text-gray-200 bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-signal/20 focus:border-signal transition-colors placeholder:text-steel/45 dark:placeholder:text-gray-600"
       />
     </div>
   );
@@ -43,7 +43,7 @@ function TextArea({ label, value, onChange, placeholder = '' }: {
         onChange={e => onChange(e.target.value)}
         placeholder={placeholder}
         rows={3}
-        className="w-full border border-steel/20 rounded-xl px-4 py-2.5 text-sm text-ink bg-white focus:outline-none focus:ring-4 focus:ring-signal/10 focus:border-signal/70 transition-all placeholder:text-steel/45 resize-none"
+        className="w-full border border-gray-200 dark:border-gray-700 rounded-lg px-4 py-2.5 text-sm text-ink dark:text-gray-200 bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-signal/20 focus:border-signal transition-colors placeholder:text-steel/45 dark:placeholder:text-gray-600 resize-none"
       />
     </div>
   );
@@ -101,17 +101,17 @@ export function SettingsPage({ company, carrier, savedCarriers, onSave, onAddCar
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
       <div>
-        <h1 className="text-2xl md:text-3xl font-extrabold text-ink tracking-tight font-outfit">Settings</h1>
-        <p className="text-steel text-sm mt-0.5 font-medium">Configure company info, carrier settings, and payment preferences.</p>
+        <h1 className="text-xl md:text-2xl font-bold text-ink tracking-tight">Settings</h1>
+        <p className="text-steel text-sm mt-0.5">Configure company info, carrier settings, and payment preferences.</p>
       </div>
 
       {/* Company Branding */}
-      <section className="bg-white rounded-2xl shadow-panel border border-steel/10 p-6 space-y-4">
-        <div className="flex items-center gap-2.5 border-b border-steel/5 pb-3">
-          <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center border border-purple-100">
+      <section className="bg-white dark:bg-gray-900 rounded-lg shadow-panel border border-gray-200 dark:border-gray-800 p-6 space-y-4">
+        <div className="flex items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-3">
+          <div className="w-8 h-8 rounded-lg bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-100 dark:border-purple-900/40">
             <Image size={16} />
           </div>
-          <h2 className="text-sm font-bold text-ink uppercase tracking-wider">Company Branding</h2>
+          <h2 className="text-sm font-semibold text-ink">Company Branding</h2>
         </div>
         <div className="flex flex-col sm:flex-row items-start gap-6">
           <div className="space-y-2">
@@ -145,12 +145,12 @@ export function SettingsPage({ company, carrier, savedCarriers, onSave, onAddCar
       </section>
 
       {/* Dispatch Company */}
-      <section className="bg-white rounded-2xl shadow-panel border border-steel/10 p-6 space-y-4">
-        <div className="flex items-center gap-2.5 border-b border-steel/5 pb-3">
-          <div className="w-8 h-8 rounded-lg bg-signal/5 text-signal flex items-center justify-center">
+      <section className="bg-white dark:bg-gray-900 rounded-lg shadow-panel border border-gray-200 dark:border-gray-800 p-6 space-y-4">
+        <div className="flex items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-3">
+          <div className="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/30 text-signal flex items-center justify-center border border-blue-100 dark:border-blue-900/40">
             <Building2 size={16} />
           </div>
-          <h2 className="text-sm font-bold text-ink uppercase tracking-wider">Dispatch Company Profile</h2>
+          <h2 className="text-sm font-semibold text-ink">Dispatch Company Profile</h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="sm:col-span-2">
@@ -165,13 +165,13 @@ export function SettingsPage({ company, carrier, savedCarriers, onSave, onAddCar
       </section>
 
       {/* Carrier Section */}
-      <section className="bg-white rounded-2xl shadow-panel border border-steel/10 p-6 space-y-4">
-        <div className="flex items-center justify-between border-b border-steel/5 pb-3">
+      <section className="bg-white dark:bg-gray-900 rounded-lg shadow-panel border border-gray-200 dark:border-gray-800 p-6 space-y-4">
+        <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-3">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-amberline/10 text-amberline flex items-center justify-center">
+            <div className="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/30 text-amberline flex items-center justify-center border border-amber-100 dark:border-amber-900/40">
               <Truck size={16} />
             </div>
-            <h2 className="text-sm font-bold text-ink uppercase tracking-wider">Carrier Information</h2>
+            <h2 className="text-sm font-semibold text-ink">Carrier Information</h2>
           </div>
           {carr.carrierName && (
             <button
@@ -191,7 +191,7 @@ export function SettingsPage({ company, carrier, savedCarriers, onSave, onAddCar
                 <div key={sc.id} className="flex items-center gap-1">
                   <button
                     onClick={() => handleSelectCarrier(sc.id)}
-                    className="px-3 py-1.5 text-xs font-semibold bg-lane border border-steel/15 rounded-lg hover:border-signal hover:text-signal transition-all"
+                    className="px-3 py-1.5 text-xs font-semibold bg-lane dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-signal hover:text-signal text-ink dark:text-gray-200 transition-colors"
                   >
                     {sc.carrierName} {sc.mcNumber && `(${sc.mcNumber})`}
                   </button>
@@ -221,12 +221,12 @@ export function SettingsPage({ company, carrier, savedCarriers, onSave, onAddCar
       </section>
 
       {/* Payment */}
-      <section className="bg-white rounded-2xl shadow-panel border border-steel/10 p-6 space-y-4">
-        <div className="flex items-center gap-2.5 border-b border-steel/5 pb-3">
-          <div className="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+      <section className="bg-white dark:bg-gray-900 rounded-lg shadow-panel border border-gray-200 dark:border-gray-800 p-6 space-y-4">
+        <div className="flex items-center gap-2.5 border-b border-gray-100 dark:border-gray-800 pb-3">
+          <div className="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-100 dark:border-emerald-900/40">
             <DollarSign size={16} />
           </div>
-          <h2 className="text-sm font-bold text-ink uppercase tracking-wider">Payment & Billing</h2>
+          <h2 className="text-sm font-semibold text-ink dark:text-gray-200">Payment & Billing</h2>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label="Dispatch %" value={String(comp.dispatchPercentage)} onChange={v => setComp(p => ({ ...p, dispatchPercentage: Number(v) || 0 }))} type="number" placeholder="10" />
@@ -248,7 +248,7 @@ export function SettingsPage({ company, carrier, savedCarriers, onSave, onAddCar
       {/* Save Button */}
       <button
         onClick={handleSave}
-        className="flex items-center gap-2 px-6 py-3 bg-signal text-white rounded-xl font-bold text-sm hover:bg-signal/90 shadow-sm hover:shadow-md transition-all"
+        className="flex items-center gap-2 px-6 py-3 bg-signal text-white rounded-lg font-semibold text-sm hover:bg-signal/90 shadow-sm transition-colors"
       >
         {saved ? <><CheckCircle size={16} /> Saved!</> : <><Save size={16} /> Save All Settings</>}
       </button>

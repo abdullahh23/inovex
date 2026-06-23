@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthLayout, AuthInput, AuthButton, AuthLink } from '../../components/auth/AuthLayout';
 import { supabase } from '../../lib/supabase';
@@ -13,6 +13,10 @@ export function ResetPasswordPage() {
   const [success, setSuccess] = useState(false);
   const [ready, setReady] = useState(false);
   const navigate = useNavigate();
+  const redirectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Cleanup timer on unmount
+  useEffect(() => () => { if (redirectTimer.current) clearTimeout(redirectTimer.current); }, []);
 
   useEffect(() => {
     // Listen for the PASSWORD_RECOVERY event from Supabase
@@ -57,7 +61,7 @@ export function ResetPasswordPage() {
       setSuccess(true);
       // Sign out so they log in fresh with new password
       await supabase.auth.signOut();
-      setTimeout(() => navigate('/login'), 3000);
+      redirectTimer.current = setTimeout(() => navigate('/login'), 3000);
     }
   };
 

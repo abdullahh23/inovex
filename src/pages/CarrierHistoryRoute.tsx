@@ -14,22 +14,37 @@ export function CarrierHistoryRoute() {
     try {
       const data = await fetchCarrierHistory(user.id);
       setInvoices(data);
-    } catch (e) {
-      console.error('Failed to load carrier history:', e);
+    } catch {
+      // Error is non-critical — page shows empty state
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, [user]);
 
   useEffect(() => { loadData(); }, [loadData]);
 
   const handleToggleStatus = async (invoiceId: string, newStatus: 'paid' | 'unpaid') => {
-    await toggleInvoiceStatus(invoiceId, newStatus);
+    // Optimistic update first for instant UI response
     setInvoices(prev => prev.map(inv => inv.id === invoiceId ? { ...inv, status: newStatus } : inv));
+    try {
+      await toggleInvoiceStatus(invoiceId, newStatus);
+    } catch {
+      // Rollback optimistic update on failure
+      setInvoices(prev => prev.map(inv =>
+        inv.id === invoiceId ? { ...inv, status: newStatus === 'paid' ? 'unpaid' : 'paid' } : inv
+      ));
+    }
   };
 
   const handleDelete = async (invoiceId: string) => {
-    await deleteInvoice(invoiceId);
+    // Optimistic removal
     setInvoices(prev => prev.filter(inv => inv.id !== invoiceId));
+    try {
+      await deleteInvoice(invoiceId);
+    } catch {
+      // Restore on failure
+      loadData();
+    }
   };
 
   return (

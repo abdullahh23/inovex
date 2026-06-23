@@ -55,28 +55,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
-      setSession(s);
-      if (s?.user) {
-        fetchProfile(s.user.id).then(p => {
-          if (p?.is_disabled) {
-            supabase.auth.signOut();
-            setProfile(null);
-          } else {
-            setProfile(p);
-          }
+    supabase.auth.getSession()
+      .then(({ data: { session: s } }) => {
+        setSession(s);
+        if (s?.user) {
+          fetchProfile(s.user.id).then(p => {
+            if (!p || p.is_disabled) {
+              supabase.auth.signOut();
+              setProfile(null);
+            } else {
+              setProfile(p);
+            }
+            setLoading(false);
+          });
+        } else {
           setLoading(false);
-        });
-      } else {
+        }
+      })
+      .catch(() => {
+        // Network error — treat as unauthenticated to fail safe
+        setSession(null);
+        setProfile(null);
         setLoading(false);
-      }
-    });
+      });
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
       if (s?.user) {
         fetchProfile(s.user.id).then(p => {
-          if (p?.is_disabled) {
+          if (!p || p.is_disabled) {
+            // Null profile = DB error or disabled — fail safe to unauthenticated
             supabase.auth.signOut();
             setProfile(null);
           } else {
@@ -136,8 +144,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: error?.message ?? null };
   };
 
-  // Default to 'approved' — new users no longer need admin approval
-  const userStatus = profile?.status || 'approved';
+  // If profile is null (not yet loaded or error) — block access
+  // Default to 'pending' not 'approved' when profile is missing, so null profile doesn't grant access
+  const userStatus = profile?.status || (session ? 'pending' : 'approved');
   const isAdminUser = profile?.role === 'admin' && !profile?.is_disabled;
   const isPending = !isAdminUser && userStatus === 'pending';
   const isSuspended = !isAdminUser && userStatus === 'suspended';

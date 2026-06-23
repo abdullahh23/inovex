@@ -35,7 +35,6 @@ export function TechTemplate({
 
   return (
     <div
-      id="invoice-root"
       style={{
         WebkitPrintColorAdjust: 'exact',
         printColorAdjust: 'exact',
@@ -43,7 +42,7 @@ export function TechTemplate({
         fontSize: '12px',
         color: '#334155',
         background: '#ffffff',
-        width: '820px',
+        width: '100%',
         margin: '0 auto',
         padding: '40px 50px',
         boxSizing: 'border-box',

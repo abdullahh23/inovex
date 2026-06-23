@@ -61,22 +61,21 @@ export function DashboardPage({
 
   useEffect(() => { loadInvoiceStats(); }, [loadInvoiceStats]);
 
-  const isPending = profile?.status === 'pending';
+  const isPending   = profile?.status === 'pending';
   const isSuspended = profile?.status === 'suspended';
 
-  // Split limits
-  const manualLimit = profile?.manual_load_limit ?? 15;
-  const manualUsed = profile?.manual_loads_used ?? 0;
-  const fileLimit = profile?.file_upload_limit ?? 20;
-  const fileUsed = profile?.file_uploads_used ?? 0;
+  const manualLimit = profile?.manual_load_limit  ?? 15;
+  const manualUsed  = profile?.manual_loads_used  ?? 0;
+  const fileLimit   = profile?.file_upload_limit  ?? 20;
+  const fileUsed    = profile?.file_uploads_used  ?? 0;
 
   let fileDisabledMessage = '';
-  if (isPending) fileDisabledMessage = 'Your account is awaiting admin approval.';
+  if (isPending)        fileDisabledMessage = 'Your account is awaiting admin approval.';
   else if (isSuspended) fileDisabledMessage = 'Your account has been suspended. Contact admin.';
   else if (!canUploadFile) fileDisabledMessage = `File upload limit reached (${fileUsed}/${fileLimit}). Contact support on WhatsApp for more credits.`;
 
   let manualDisabledMessage = '';
-  if (isPending) manualDisabledMessage = 'Your account is awaiting admin approval.';
+  if (isPending)        manualDisabledMessage = 'Your account is awaiting admin approval.';
   else if (isSuspended) manualDisabledMessage = 'Your account has been suspended. Contact admin.';
   else if (!canAddManual) manualDisabledMessage = `Manual load limit reached (${manualUsed}/${manualLimit}). Contact support on WhatsApp for more credits.`;
 
@@ -97,85 +96,97 @@ export function DashboardPage({
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Title Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="space-y-5 animate-fade-in">
+
+      {/* ── Page Header ── */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-1">
         <div>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-ink tracking-tight font-outfit">Weekly Loads</h1>
-          <p className="text-steel text-sm mt-0.5 font-medium">Upload rate confirmations to auto-extract and add loads.</p>
+          <h1 className="text-xl md:text-2xl font-bold text-ink tracking-tight">Weekly Loads</h1>
+          <p className="text-steel text-sm mt-0.5">Upload rate confirmations to auto-extract and add loads.</p>
         </div>
       </div>
 
-      {/* Warnings & Alerts */}
+      {/* ── Setup Warnings ── */}
       {!company.companyName && (
-        <div className="bg-amberline/5 border border-amberline/20 text-amberline rounded-2xl p-4 text-xs font-semibold flex items-center gap-2.5 shadow-card">
-          <AlertTriangle size={16} className="shrink-0" />
+        <div className="flex items-center gap-2.5 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-xs font-medium">
+          <AlertTriangle size={15} className="shrink-0 text-amber-600" />
           <span>Complete your company settings before exporting invoices.</span>
         </div>
       )}
 
       {!carrier.carrierName && (
-        <div className="bg-amberline/5 border border-amberline/20 text-amberline rounded-2xl p-4 text-xs font-semibold flex items-center gap-2.5 shadow-card">
-          <AlertTriangle size={16} className="shrink-0" />
+        <div className="flex items-center gap-2.5 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-xs font-medium">
+          <AlertTriangle size={15} className="shrink-0 text-amber-600" />
           <span>Carrier information is not set. Go to Settings to add carrier details.</span>
         </div>
       )}
 
-      {/* Motivational Slider */}
+      {/* ── Motivational Banner ── */}
       <MotivationalSlider />
 
-      {/* Approval Status Banners */}
+      {/* ── Account Status Alerts ── */}
       {isPending && (
-        <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl p-4 text-xs font-semibold flex items-center gap-2.5 shadow-card">
-          <Clock size={16} className="shrink-0 text-amber-600" />
+        <div className="flex items-center gap-2.5 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-xs font-medium">
+          <Clock size={15} className="shrink-0 text-amber-600" />
           <span>Your account is awaiting admin approval. You cannot upload documents yet.</span>
         </div>
       )}
 
       {isSuspended && (
-        <div className="bg-red-50 border border-red-200 text-red-700 rounded-2xl p-4 text-xs font-semibold flex items-center gap-2.5 shadow-card">
-          <Shield size={16} className="shrink-0 text-red-600" />
+        <div className="flex items-center gap-2.5 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-xs font-medium">
+          <Shield size={15} className="shrink-0 text-red-600" />
           <span>Your account has been suspended. Contact admin for assistance.</span>
         </div>
       )}
 
       {!isPending && !isSuspended && !canUploadFile && (
-        <div className="bg-red-50 border border-red-200 text-red-700 rounded-2xl p-4 text-xs font-semibold flex items-center gap-2.5 shadow-card">
-          <AlertTriangle size={16} className="shrink-0 text-red-600" />
+        <div className="flex items-center gap-2.5 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-xs font-medium">
+          <AlertTriangle size={15} className="shrink-0 text-red-600" />
           <span>
-            File upload limit reached ({fileUsed}/{fileLimit}). 
-            <a href="https://wa.me/16023451572" target="_blank" rel="noopener noreferrer" className="text-signal font-bold underline ml-1">Contact support on WhatsApp</a> for more credits.
+            File upload limit reached ({fileUsed}/{fileLimit}).{' '}
+            <a href="https://wa.me/16023451572" target="_blank" rel="noopener noreferrer" className="text-signal font-semibold underline">
+              Contact support on WhatsApp
+            </a>{' '}
+            for more credits.
           </span>
         </div>
       )}
 
       {!isPending && !isSuspended && !canAddManual && (
-        <div className="bg-red-50 border border-red-200 text-red-700 rounded-2xl p-4 text-xs font-semibold flex items-center gap-2.5 shadow-card">
-          <AlertTriangle size={16} className="shrink-0 text-red-600" />
+        <div className="flex items-center gap-2.5 px-4 py-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-xs font-medium">
+          <AlertTriangle size={15} className="shrink-0 text-red-600" />
           <span>
-            Manual load limit reached ({manualUsed}/{manualLimit}). 
-            <a href="https://wa.me/16023451572" target="_blank" rel="noopener noreferrer" className="text-signal font-bold underline ml-1">Contact support on WhatsApp</a> for more credits.
+            Manual load limit reached ({manualUsed}/{manualLimit}).{' '}
+            <a href="https://wa.me/16023451572" target="_blank" rel="noopener noreferrer" className="text-signal font-semibold underline">
+              Contact support on WhatsApp
+            </a>{' '}
+            for more credits.
           </span>
         </div>
       )}
 
-      {/* Low credits warning */}
       {!isPending && !isSuspended && canUploadFile && fileLimit > 0 && (fileLimit - fileUsed) <= 5 && (
-        <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl p-4 text-xs font-semibold flex items-center gap-2.5 shadow-card">
-          <AlertTriangle size={16} className="shrink-0 text-amber-600" />
+        <div className="flex items-center gap-2.5 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-xs font-medium">
+          <AlertTriangle size={15} className="shrink-0 text-amber-600" />
           <span>
-            ⚠️ Only {fileLimit - fileUsed} file upload{(fileLimit - fileUsed) !== 1 ? 's' : ''} remaining! 
-            <a href="https://wa.me/16023451572" target="_blank" rel="noopener noreferrer" className="text-signal font-bold underline ml-1">Contact support on WhatsApp</a> for more credits.
+            Only {fileLimit - fileUsed} file upload{(fileLimit - fileUsed) !== 1 ? 's' : ''} remaining.{' '}
+            <a href="https://wa.me/16023451572" target="_blank" rel="noopener noreferrer" className="text-signal font-semibold underline">
+              Contact support
+            </a>{' '}
+            for more credits.
           </span>
         </div>
       )}
 
       {!isPending && !isSuspended && canAddManual && manualLimit > 0 && (manualLimit - manualUsed) <= 3 && (
-        <div className="bg-amber-50 border border-amber-200 text-amber-800 rounded-2xl p-4 text-xs font-semibold flex items-center gap-2.5 shadow-card">
-          <AlertTriangle size={16} className="shrink-0 text-amber-600" />
+        <div className="flex items-center gap-2.5 px-4 py-3 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-xs font-medium">
+          <AlertTriangle size={15} className="shrink-0 text-amber-600" />
           <span>
-            ⚠️ Only {manualLimit - manualUsed} manual load{(manualLimit - manualUsed) !== 1 ? 's' : ''} remaining! 
-            <a href="https://wa.me/16023451572" target="_blank" rel="noopener noreferrer" className="text-signal font-bold underline ml-1">Contact support on WhatsApp</a> for more credits.
+            Only {manualLimit - manualUsed} manual load{(manualLimit - manualUsed) !== 1 ? 's' : ''} remaining.{' '}
+            <a href="https://wa.me/16023451572" target="_blank" rel="noopener noreferrer" className="text-signal font-semibold underline">
+              Contact support
+            </a>{' '}
+            for more credits.
           </span>
         </div>
       )}
@@ -184,46 +195,51 @@ export function DashboardPage({
         <motion.div
           initial={{ opacity: 0, y: -4 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-2.5 bg-teal-50 border border-teal-200 text-teal-700 rounded-2xl p-4 text-xs font-semibold shadow-card"
+          className="flex items-center gap-2.5 px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-lg text-emerald-700 text-xs font-medium"
         >
-          <CheckCircle size={16} className="shrink-0 text-teal-600" />
-          <span>Load "{lastAdded}" added successfully!</span>
+          <CheckCircle size={15} className="shrink-0 text-emerald-600" />
+          <span>Load "{lastAdded}" added successfully.</span>
         </motion.div>
       )}
 
-      {/* Upload Block */}
-      <div className="bg-white rounded-2xl shadow-panel border border-steel/10 p-6 space-y-4">
-        <div className="flex items-center justify-between border-b border-steel/5 pb-4">
-          <h2 className="text-sm font-bold text-ink uppercase tracking-wider">Upload Rate Confirmation</h2>
+      {/* ── Upload Section ── */}
+      <div className="bg-white border border-gray-200 rounded-lg shadow-panel">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <div>
+            <h2 className="text-sm font-semibold text-ink">Upload Rate Confirmation</h2>
+            <p className="text-xs text-steel mt-0.5">PDF, JPG, PNG, or WEBP — up to 20 MB</p>
+          </div>
           <button
             onClick={() => setManualOpen(true)}
             disabled={!canAddManual}
-            className={`flex items-center gap-1.5 text-xs font-bold px-3.5 py-2 rounded-xl transition-all ${
+            className={`flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2 rounded-md border transition-colors ${
               canAddManual
-                ? 'text-signal bg-signal/5 border border-signal/15 hover:bg-signal hover:text-white'
-                : 'text-steel/50 bg-steel/5 border border-steel/10 cursor-not-allowed'
+                ? 'text-signal bg-white border-signal/30 hover:bg-signal hover:text-white hover:border-signal'
+                : 'text-steel/40 bg-gray-50 border-gray-200 cursor-not-allowed'
             }`}
             title={!canAddManual ? manualDisabledMessage : 'Add a load manually'}
           >
-            <Plus size={14} /> Manual Load Entry
+            <Plus size={13} /> Manual Entry
           </button>
         </div>
-        <UploadZone onLoadExtracted={handleExtracted} disabled={!canUploadFile} disabledMessage={fileDisabledMessage} />
-        {profile && profile.status === 'approved' && (
-          <div className="flex flex-col sm:flex-row justify-end gap-3 mt-1 text-xs font-semibold">
-            <span className={`${fileLimit > 0 && (fileLimit - fileUsed) <= 5 ? 'text-amber-600' : 'text-steel'}`}>
-              📁 File Uploads: {fileUsed} / {fileLimit === 0 ? '∞' : fileLimit}
-              {fileLimit > 0 && <span className="text-steel/60 ml-1">({fileLimit - fileUsed} remaining)</span>}
-            </span>
-            <span className={`${manualLimit > 0 && (manualLimit - manualUsed) <= 3 ? 'text-amber-600' : 'text-steel'}`}>
-              ✏️ Manual Loads: {manualUsed} / {manualLimit === 0 ? '∞' : manualLimit}
-              {manualLimit > 0 && <span className="text-steel/60 ml-1">({manualLimit - manualUsed} remaining)</span>}
-            </span>
-          </div>
-        )}
+        <div className="p-5">
+          <UploadZone onLoadExtracted={handleExtracted} disabled={!canUploadFile} disabledMessage={fileDisabledMessage} />
+          {profile && profile.status === 'approved' && (
+            <div className="flex flex-col sm:flex-row justify-end gap-4 mt-3 text-[11px] font-medium text-steel border-t border-gray-100 pt-3">
+              <span className={fileLimit > 0 && (fileLimit - fileUsed) <= 5 ? 'text-amber-600 font-semibold' : ''}>
+                File Uploads: {fileUsed} / {fileLimit === 0 ? '∞' : fileLimit}
+                {fileLimit > 0 && <span className="text-steel/50 ml-1">({fileLimit - fileUsed} left)</span>}
+              </span>
+              <span className={manualLimit > 0 && (manualLimit - manualUsed) <= 3 ? 'text-amber-600 font-semibold' : ''}>
+                Manual Loads: {manualUsed} / {manualLimit === 0 ? '∞' : manualLimit}
+                {manualLimit > 0 && <span className="text-steel/50 ml-1">({manualLimit - manualUsed} left)</span>}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Stats Cards */}
+      {/* ── Stats Cards ── */}
       <TotalsBar
         totalGrossRevenue={totalGrossRevenue}
         dispatchFee={dispatchFee}
@@ -233,23 +249,30 @@ export function DashboardPage({
         totalUnpaid={totalUnpaid}
       />
 
-      {/* Table Section */}
-      <div className="bg-white rounded-2xl shadow-panel border border-steel/10 p-6 space-y-4">
-        <div className="flex items-center justify-between border-b border-steel/5 pb-4">
-          <h2 className="text-sm font-bold text-ink uppercase tracking-wider">Weekly Load Log ({loads.length})</h2>
+      {/* ── Load Table ── */}
+      <div className="bg-white border border-gray-200 rounded-lg shadow-panel">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <h2 className="text-sm font-semibold text-ink">
+            Weekly Load Log
+            <span className="ml-2 text-xs font-medium text-steel bg-lane px-2 py-0.5 rounded">
+              {loads.length}
+            </span>
+          </h2>
           {loads.length > 0 && (
             <button
               onClick={() => { if (confirm('Are you sure you want to clear all active loads?')) onClearLoads(); }}
-              className="text-xs font-bold text-steel hover:text-red-500 transition-colors"
+              className="text-xs font-medium text-steel hover:text-red-600 transition-colors"
             >
               Clear Log
             </button>
           )}
         </div>
-        <LoadTable loads={loads} onRemove={onRemoveLoad} />
+        <div className="p-5">
+          <LoadTable loads={loads} onRemove={onRemoveLoad} />
+        </div>
       </div>
 
-      {/* Manual Entry Modal */}
+      {/* ── Manual Entry Modal ── */}
       <ManualLoadModal open={manualOpen} onClose={() => setManualOpen(false)} onSubmit={handleManual} />
     </div>
   );

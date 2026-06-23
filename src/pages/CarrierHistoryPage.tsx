@@ -1,8 +1,9 @@
 import { useState, useMemo, Fragment } from 'react';
-import { Search, ChevronUp, ChevronDown, Eye, Trash2, ArrowUpDown, TrendingUp, TrendingDown, X, ChevronRight, Truck, FileText } from 'lucide-react';
+import { Search, ChevronUp, ChevronDown, Eye, Trash2, ArrowUpDown, TrendingUp, TrendingDown, X, ChevronRight, Truck, FileText, DollarSign, AlertCircle, CheckCircle, Printer } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatCurrency, formatDate } from '../lib/calc';
-import type { CarrierHistory } from '../types';
+import type { CarrierHistory, Load, CompanySettings, CarrierSettings } from '../types';
+import { InvoiceTemplate } from '../templates/InvoiceTemplate';
 
 interface InvoiceRow {
   id: string;
@@ -37,7 +38,52 @@ export function CarrierHistoryPage({ invoices, loading, onToggleStatus, onDelete
   const [selectedCarrier, setSelectedCarrier] = useState<string | null>(null);
   const [previewInvoice, setPreviewInvoice] = useState<InvoiceRow | null>(null);
 
-  // Compute carrier stats
+  // ── Paid Amount Modal state ──
+  // Store only the invoiceId string — avoids stale object references
+  const [payModalId, setPayModalId] = useState<string | null>(null);
+  const [payInput, setPayInput] = useState('');
+  // Record<invoiceId, pendingAmount> — so multiple invoices can each have a pending note
+  const [pendingNotes, setPendingNotes] = useState<Record<string, number>>({});
+
+  // Find the full invoice object from the invoices prop by ID
+  const payModalInvoice = payModalId ? invoices.find(i => i.id === payModalId) ?? null : null;
+
+  const handleStatusClick = (inv: InvoiceRow) => {
+    if (inv.status === 'paid') {
+      // Already paid — clicking marks it back to unpaid, clear its pending note
+      onToggleStatus(inv.id, 'unpaid');
+      setPendingNotes(prev => { const n = { ...prev }; delete n[inv.id]; return n; });
+    } else {
+      // Unpaid — open "how much was paid" modal
+      setPayInput('');
+      setPayModalId(inv.id);
+    }
+  };
+
+  const handlePayConfirm = async () => {
+    if (!payModalInvoice) return;
+    const invoiceId = payModalInvoice.id;
+    const invoiceFee = Number(payModalInvoice.dispatch_fee);
+    const paid = parseFloat(payInput) || 0;
+
+    // Close modal immediately so UI stays responsive
+    setPayModalId(null);
+
+    if (paid > 0 && paid < invoiceFee) {
+      // Partial payment — stay unpaid, record pending balance for this invoice only
+      const remaining = +(invoiceFee - paid).toFixed(2);
+      setPendingNotes(prev => ({ ...prev, [invoiceId]: remaining }));
+      // Do NOT call onToggleStatus — invoice stays unpaid
+    } else {
+      // Full payment OR no amount entered — mark as paid, clear pending note
+      setPendingNotes(prev => { const n = { ...prev }; delete n[invoiceId]; return n; });
+      await onToggleStatus(invoiceId, 'paid');
+    }
+  };
+
+  const handlePayCancel = () => setPayModalId(null);
+
+  // Compute carrier stats — includes pendingNotes so partial payments are reflected everywhere
   const carrierStats = useMemo(() => {
     const map = new Map<string, CarrierHistory>();
     for (const inv of invoices) {
@@ -47,12 +93,26 @@ export function CarrierHistoryPage({ invoices, loading, onToggleStatus, onDelete
       existing.totalLoads += inv.invoice_loads?.length || 0;
       existing.totalGrossAmount += Number(inv.total_gross_revenue) || 0;
       existing.totalDispatchFees += Number(inv.dispatch_fee) || 0;
-      if (inv.status === 'paid') existing.totalPaid += Number(inv.dispatch_fee) || 0;
-      else existing.totalUnpaid += Number(inv.dispatch_fee) || 0;
+
+      const fee = Number(inv.dispatch_fee) || 0;
+      if (inv.status === 'paid') {
+        // Fully paid in DB
+        existing.totalPaid += fee;
+      } else if (pendingNotes[inv.id] !== undefined) {
+        // Partial payment recorded locally:
+        // pending amount stays as unpaid, the rest counts as paid
+        const pending = pendingNotes[inv.id];
+        existing.totalUnpaid += pending;
+        existing.totalPaid += +(fee - pending).toFixed(2);
+      } else {
+        // Fully unpaid
+        existing.totalUnpaid += fee;
+      }
+
       map.set(name, existing);
     }
     return Array.from(map.values());
-  }, [invoices]);
+  }, [invoices, pendingNotes]);
 
   // Get all loads for a specific carrier, ordered by date added
   const carrierLoads = useMemo(() => {
@@ -168,62 +228,62 @@ export function CarrierHistoryPage({ invoices, loading, onToggleStatus, onDelete
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white border border-steel/10 rounded-2xl p-5 shadow-card">
-          <div className="text-xxs font-bold text-steel uppercase tracking-widest mb-1.5">Total Invoices</div>
-          <div className="text-3xl font-extrabold text-ink">{invoices.length}</div>
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-5 shadow-card">
+          <div className="text-[10px] font-semibold text-steel uppercase tracking-widest mb-1.5">Total Invoices</div>
+          <div className="text-3xl font-bold text-ink">{invoices.length}</div>
         </div>
-        <div className="bg-white border border-steel/10 rounded-2xl p-5 shadow-card">
-          <div className="text-xxs font-bold text-steel uppercase tracking-widest mb-1.5">Carriers</div>
-          <div className="text-3xl font-extrabold text-ink">{carrierStats.length}</div>
+        <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-5 shadow-card">
+          <div className="text-[10px] font-semibold text-steel uppercase tracking-widest mb-1.5">Carriers</div>
+          <div className="text-3xl font-bold text-ink">{carrierStats.length}</div>
         </div>
-        <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-5 shadow-card">
+        <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/40 rounded-lg p-5 shadow-card">
           <div className="flex items-center gap-1.5">
-            <TrendingUp size={14} className="text-emerald-600" />
-            <div className="text-xxs font-bold text-emerald-700 uppercase tracking-widest">Total Paid</div>
+            <TrendingUp size={14} className="text-emerald-600 dark:text-emerald-400" />
+            <div className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-widest">Total Paid</div>
           </div>
-          <div className="text-3xl font-extrabold text-emerald-700 mt-1.5">{formatCurrency(totalPaid)}</div>
+          <div className="text-3xl font-bold text-emerald-700 dark:text-emerald-400 mt-1.5">{formatCurrency(totalPaid)}</div>
         </div>
-        <div className="bg-red-50 border border-red-200 rounded-2xl p-5 shadow-card">
+        <div className="bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/40 rounded-lg p-5 shadow-card">
           <div className="flex items-center gap-1.5">
-            <TrendingDown size={14} className="text-red-600" />
-            <div className="text-xxs font-bold text-red-700 uppercase tracking-widest">Total Unpaid</div>
+            <TrendingDown size={14} className="text-red-600 dark:text-red-400" />
+            <div className="text-[10px] font-semibold text-red-700 dark:text-red-400 uppercase tracking-widest">Total Unpaid</div>
           </div>
-          <div className="text-3xl font-extrabold text-red-700 mt-1.5">{formatCurrency(totalUnpaid)}</div>
+          <div className="text-3xl font-bold text-red-700 dark:text-red-400 mt-1.5">{formatCurrency(totalUnpaid)}</div>
         </div>
       </div>
 
       {/* Carrier Breakdown — Clickable Cards */}
       {carrierStats.length > 0 && (
-        <div className="bg-white rounded-2xl shadow-panel border border-steel/10 p-6">
-          <h2 className="text-sm font-bold text-ink uppercase tracking-wider mb-4 border-b border-steel/5 pb-3">
+        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-panel border border-gray-200 dark:border-gray-800 p-6">
+          <h2 className="text-sm font-semibold text-ink mb-4 border-b border-gray-100 dark:border-gray-800 pb-3">
             Carrier Breakdown
-            <span className="text-steel font-medium normal-case ml-2 text-xs">— click a carrier to view all loads</span>
+            <span className="text-steel font-normal ml-2 text-xs">— click a carrier to view all loads</span>
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {carrierStats.map(c => (
               <button
                 key={c.carrierName}
                 onClick={() => setSelectedCarrier(selectedCarrier === c.carrierName ? null : c.carrierName)}
-                className={`text-left border rounded-xl p-4 transition-all duration-200 cursor-pointer ${
+                className={`text-left border rounded-lg p-4 transition-all duration-150 cursor-pointer ${
                   selectedCarrier === c.carrierName
-                    ? 'border-signal bg-signal/5 shadow-md ring-2 ring-signal/20'
-                    : 'border-steel/10 hover:border-signal/40 hover:shadow-card'
+                    ? 'border-signal bg-blue-50 dark:bg-blue-950/20 shadow-md ring-2 ring-signal/20'
+                    : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-signal/40 dark:hover:border-signal/30 hover:shadow-card'
                 }`}
               >
                 <div className="flex items-center justify-between mb-2">
-                  <div className="font-bold text-ink text-sm truncate flex items-center gap-2">
+                  <div className="font-semibold text-ink text-sm truncate flex items-center gap-2">
                     <Truck size={14} className={selectedCarrier === c.carrierName ? 'text-signal' : 'text-steel'} />
                     {c.carrierName}
                   </div>
                   <ChevronRight size={14} className={`transition-transform duration-200 ${selectedCarrier === c.carrierName ? 'rotate-90 text-signal' : 'text-steel/40'}`} />
                 </div>
                 <div className="grid grid-cols-2 gap-y-1 text-xs">
-                  <span className="text-steel">Invoices:</span><span className="font-semibold text-ink">{c.totalInvoices}</span>
-                  <span className="text-steel">Loads:</span><span className="font-semibold text-ink">{c.totalLoads}</span>
-                  <span className="text-steel">Gross:</span><span className="font-semibold text-ink">{formatCurrency(c.totalGrossAmount)}</span>
-                  <span className="text-steel">Fees:</span><span className="font-semibold text-ink">{formatCurrency(c.totalDispatchFees)}</span>
-                  <span className="text-emerald-600">Paid:</span><span className="font-semibold text-emerald-700">{formatCurrency(c.totalPaid)}</span>
-                  <span className="text-red-500">Unpaid:</span><span className="font-semibold text-red-600">{formatCurrency(c.totalUnpaid)}</span>
+                  <span className="text-steel">Invoices:</span><span className="font-medium text-ink">{c.totalInvoices}</span>
+                  <span className="text-steel">Loads:</span><span className="font-medium text-ink">{c.totalLoads}</span>
+                  <span className="text-steel">Gross:</span><span className="font-medium text-ink">{formatCurrency(c.totalGrossAmount)}</span>
+                  <span className="text-steel">Fees:</span><span className="font-medium text-ink">{formatCurrency(c.totalDispatchFees)}</span>
+                  <span className="text-emerald-600 dark:text-emerald-400">Paid:</span><span className="font-semibold text-emerald-700 dark:text-emerald-400">{formatCurrency(c.totalPaid)}</span>
+                  <span className="text-red-500 dark:text-red-400">Unpaid:</span><span className="font-semibold text-red-600 dark:text-red-400">{formatCurrency(c.totalUnpaid)}</span>
                 </div>
               </button>
             ))}
@@ -233,8 +293,8 @@ export function CarrierHistoryPage({ invoices, loading, onToggleStatus, onDelete
 
       {/* Selected Carrier — All Loads Table */}
       {selectedCarrier && selectedStats && (
-        <div className="bg-white rounded-2xl shadow-panel border-2 border-signal/20 p-6 space-y-4">
-          <div className="flex items-center justify-between border-b border-steel/5 pb-4">
+        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-panel border-2 border-signal/20 p-6 space-y-4">
+          <div className="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-4">
             <div>
               <div className="flex items-center gap-2">
                 <Truck size={18} className="text-signal" />
@@ -246,7 +306,7 @@ export function CarrierHistoryPage({ invoices, loading, onToggleStatus, onDelete
             </div>
             <button
               onClick={() => setSelectedCarrier(null)}
-              className="p-2 text-steel hover:text-ink hover:bg-lane rounded-xl transition-all"
+              className="p-2 text-steel hover:text-ink dark:hover:text-gray-200 hover:bg-lane dark:hover:bg-gray-800 rounded-lg transition-colors"
               title="Close"
             >
               <X size={18} />
@@ -261,7 +321,7 @@ export function CarrierHistoryPage({ invoices, loading, onToggleStatus, onDelete
               <div className="hidden md:block overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="border-b border-steel/10 text-steel">
+                    <tr className="border-b border-gray-200 dark:border-gray-700 text-steel bg-lane dark:bg-gray-800">
                       <th className="text-left py-3 px-2 font-semibold">#</th>
                       <th className="text-left py-3 px-2 font-semibold">Load #</th>
                       <th className="text-left py-3 px-2 font-semibold">Broker</th>
@@ -274,7 +334,7 @@ export function CarrierHistoryPage({ invoices, loading, onToggleStatus, onDelete
                   </thead>
                   <tbody>
                     {carrierLoads.map((load, idx) => (
-                      <tr key={load.id} className="border-b border-steel/5 hover:bg-lane/50 transition-colors">
+                      <tr key={load.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-blue-50/40 dark:hover:bg-blue-950/10 transition-colors">
                         <td className="py-3 px-2 text-steel">{idx + 1}</td>
                         <td className="py-3 px-2 font-bold text-ink">{load.loadNumber || '—'}</td>
                         <td className="py-3 px-2 text-ink font-medium">{load.brokerName || '—'}</td>
@@ -283,10 +343,10 @@ export function CarrierHistoryPage({ invoices, loading, onToggleStatus, onDelete
                         <td className="py-3 px-2 text-right font-bold text-ink">{formatCurrency(load.grossAmount)}</td>
                         <td className="py-3 px-2 text-steel font-medium">{load.invoiceNumber}</td>
                         <td className="py-3 px-2 text-center">
-                          <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold ${
                             load.status === 'paid'
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                              : 'bg-red-50 text-red-600 border border-red-200'
+                              ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/40'
+                              : 'bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/40'
                           }`}>
                             {load.status === 'paid' ? 'Paid' : 'Unpaid'}
                           </span>
@@ -295,7 +355,7 @@ export function CarrierHistoryPage({ invoices, loading, onToggleStatus, onDelete
                     ))}
                   </tbody>
                   <tfoot>
-                    <tr className="border-t-2 border-steel/15 bg-lane/30">
+                    <tr className="border-t-2 border-gray-200 dark:border-gray-700 bg-lane dark:bg-gray-800">
                       <td colSpan={5} className="py-3 px-2 text-xs font-bold text-ink uppercase">Total ({carrierLoads.length} loads)</td>
                       <td className="py-3 px-2 text-right text-sm font-extrabold text-ink">
                         {formatCurrency(carrierLoads.reduce((s, l) => s + l.grossAmount, 0))}
@@ -309,13 +369,13 @@ export function CarrierHistoryPage({ invoices, loading, onToggleStatus, onDelete
               {/* Mobile Cards */}
               <div className="md:hidden space-y-2">
                 {carrierLoads.map((load, idx) => (
-                  <div key={load.id} className="border border-steel/10 rounded-xl p-3 space-y-1.5">
+                  <div key={load.id} className="border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 rounded-lg p-3 space-y-1.5">
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-ink text-sm">{load.loadNumber || '—'}</span>
-                      <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                      <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold ${
                         load.status === 'paid'
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                          : 'bg-red-50 text-red-600 border border-red-200'
+                          ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/40'
+                          : 'bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/40'
                       }`}>
                         {load.status === 'paid' ? 'Paid' : 'Unpaid'}
                       </span>
@@ -329,7 +389,7 @@ export function CarrierHistoryPage({ invoices, loading, onToggleStatus, onDelete
                     <div className="text-xs text-steel truncate">{load.route}</div>
                   </div>
                 ))}
-                <div className="border-t-2 border-steel/15 pt-3 flex justify-between text-sm">
+                <div className="border-t-2 border-gray-200 dark:border-gray-700 pt-3 flex justify-between text-sm">
                   <span className="font-bold text-ink">Total ({carrierLoads.length} loads)</span>
                   <span className="font-extrabold text-ink">{formatCurrency(carrierLoads.reduce((s, l) => s + l.grossAmount, 0))}</span>
                 </div>
@@ -340,9 +400,9 @@ export function CarrierHistoryPage({ invoices, loading, onToggleStatus, onDelete
       )}
 
       {/* Invoice Table */}
-      <div className="bg-white rounded-2xl shadow-panel border border-steel/10 p-6 space-y-4">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-steel/5 pb-4">
-          <h2 className="text-sm font-bold text-ink uppercase tracking-wider">Invoice History ({sorted.length})</h2>
+      <div className="bg-white dark:bg-gray-900 rounded-lg shadow-panel border border-gray-200 dark:border-gray-800 p-6 space-y-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-gray-100 dark:border-gray-800 pb-4">
+          <h2 className="text-sm font-semibold text-ink">Invoice History ({sorted.length})</h2>
           <div className="relative w-full sm:w-64">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-steel" />
             <input
@@ -350,245 +410,319 @@ export function CarrierHistoryPage({ invoices, loading, onToggleStatus, onDelete
               placeholder="Search invoices..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 text-xs border border-steel/15 rounded-xl bg-lane focus:outline-none focus:ring-2 focus:ring-signal/20 focus:border-signal/50"
+              className="w-full pl-9 pr-4 py-2 text-xs border border-gray-200 dark:border-gray-700 rounded-lg bg-lane dark:bg-gray-800 text-ink dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-signal/20 focus:border-signal placeholder:text-steel/60"
             />
           </div>
         </div>
 
-        <div className="overflow-x-auto -mx-6 px-6">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="border-b border-steel/10 text-steel">
-                <th className="text-left py-3 px-2 font-semibold cursor-pointer select-none" onClick={() => toggleSort('created_at')}>
-                  <span className="flex items-center gap-1">Date <SortIcon field="created_at" /></span>
-                </th>
-                <th className="text-left py-3 px-2 font-semibold cursor-pointer select-none" onClick={() => toggleSort('invoice_number')}>
-                  <span className="flex items-center gap-1">Invoice # <SortIcon field="invoice_number" /></span>
-                </th>
-                <th className="text-left py-3 px-2 font-semibold">Loads</th>
-                <th className="text-right py-3 px-2 font-semibold cursor-pointer select-none" onClick={() => toggleSort('total_gross_revenue')}>
-                  <span className="flex items-center justify-end gap-1">Gross <SortIcon field="total_gross_revenue" /></span>
-                </th>
-                <th className="text-right py-3 px-2 font-semibold cursor-pointer select-none" onClick={() => toggleSort('dispatch_fee')}>
-                  <span className="flex items-center justify-end gap-1">Fee <SortIcon field="dispatch_fee" /></span>
-                </th>
-                <th className="text-left py-3 px-2 font-semibold cursor-pointer select-none" onClick={() => toggleSort('carrier_name')}>
-                  <span className="flex items-center gap-1">Carrier <SortIcon field="carrier_name" /></span>
-                </th>
-                <th className="text-center py-3 px-2 font-semibold cursor-pointer select-none" onClick={() => toggleSort('status')}>
-                  <span className="flex items-center justify-center gap-1">Status <SortIcon field="status" /></span>
-                </th>
-                <th className="text-center py-3 px-2 font-semibold">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sorted.length === 0 ? (
-                <tr><td colSpan={8} className="text-center py-12 text-steel">No invoices found.</td></tr>
-              ) : (
-                sorted.map(inv => (
-                  <Fragment key={inv.id}>
-                    <tr className="border-b border-steel/5 hover:bg-lane/50 transition-colors">
-                      <td className="py-3 px-2 text-steel">{new Date(inv.created_at).toLocaleDateString()}</td>
-                      <td className="py-3 px-2 font-semibold text-ink">{inv.invoice_number}</td>
-                      <td className="py-3 px-2 text-steel">{inv.loadCount}</td>
-                      <td className="py-3 px-2 text-right font-semibold text-ink">{formatCurrency(Number(inv.total_gross_revenue))}</td>
-                      <td className="py-3 px-2 text-right font-semibold text-ink">{formatCurrency(Number(inv.dispatch_fee))}</td>
-                      <td className="py-3 px-2 text-steel font-medium truncate max-w-[120px]">{inv.displayCarrier}</td>
-                      <td className="py-3 px-2 text-center">
-                        <button
-                          onClick={() => onToggleStatus(inv.id, inv.status === 'paid' ? 'unpaid' : 'paid')}
-                          className={`inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold transition-all cursor-pointer ${
-                            inv.status === 'paid'
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
-                              : 'bg-red-50 text-red-600 border border-red-200 hover:bg-red-100'
-                          }`}
-                        >
-                          {inv.status === 'paid' ? 'Paid' : 'Unpaid'}
-                        </button>
-                      </td>
-                      <td className="py-3 px-2 text-center">
-                        <div className="flex items-center justify-center gap-1">
+          <div className="overflow-x-auto -mx-6 px-6">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-gray-200 dark:border-gray-700 text-steel bg-lane dark:bg-gray-800">
+                  <th className="text-left py-3 px-2 font-semibold cursor-pointer select-none" onClick={() => toggleSort('created_at')}>
+                    <span className="flex items-center gap-1">Date <SortIcon field="created_at" /></span>
+                  </th>
+                  <th className="text-left py-3 px-2 font-semibold cursor-pointer select-none" onClick={() => toggleSort('invoice_number')}>
+                    <span className="flex items-center gap-1">Invoice # <SortIcon field="invoice_number" /></span>
+                  </th>
+                  <th className="text-left py-3 px-2 font-semibold">Loads</th>
+                  <th className="text-right py-3 px-2 font-semibold cursor-pointer select-none" onClick={() => toggleSort('total_gross_revenue')}>
+                    <span className="flex items-center justify-end gap-1">Gross <SortIcon field="total_gross_revenue" /></span>
+                  </th>
+                  <th className="text-right py-3 px-2 font-semibold cursor-pointer select-none" onClick={() => toggleSort('dispatch_fee')}>
+                    <span className="flex items-center justify-end gap-1">Fee <SortIcon field="dispatch_fee" /></span>
+                  </th>
+                  <th className="text-left py-3 px-2 font-semibold cursor-pointer select-none" onClick={() => toggleSort('carrier_name')}>
+                    <span className="flex items-center gap-1">Carrier <SortIcon field="carrier_name" /></span>
+                  </th>
+                  <th className="text-center py-3 px-2 font-semibold cursor-pointer select-none" onClick={() => toggleSort('status')}>
+                    <span className="flex items-center justify-center gap-1">Status <SortIcon field="status" /></span>
+                  </th>
+                  <th className="text-center py-3 px-2 font-semibold">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sorted.length === 0 ? (
+                  <tr><td colSpan={8} className="text-center py-12 text-steel">No invoices found.</td></tr>
+                ) : (
+                  sorted.map(inv => (
+                    <Fragment key={inv.id}>
+                      <tr className="border-b border-gray-100 dark:border-gray-800 hover:bg-blue-50/40 dark:hover:bg-blue-950/10 transition-colors">
+                        <td className="py-3 px-2 text-steel">{new Date(inv.created_at).toLocaleDateString()}</td>
+                        <td className="py-3 px-2 font-semibold text-ink">{inv.invoice_number}</td>
+                        <td className="py-3 px-2 text-steel">{inv.loadCount}</td>
+                        <td className="py-3 px-2 text-right font-semibold text-ink">{formatCurrency(Number(inv.total_gross_revenue))}</td>
+                        <td className="py-3 px-2 text-right font-semibold text-ink">
+                           <div>{formatCurrency(Number(inv.dispatch_fee))}</div>
+                           {inv.dispatch_percentage && (
+                             <div className="text-[9px] text-steel/70 font-medium">@ {inv.dispatch_percentage}%</div>
+                           )}
+                         </td>
+                        <td className="py-3 px-2 text-steel font-medium truncate max-w-[120px]">{inv.displayCarrier}</td>
+                        <td className="py-3 px-2 text-center">
                           <button
-                            onClick={() => setExpandedInvoice(expandedInvoice === inv.id ? null : inv.id)}
-                            className="p-1.5 text-steel hover:text-signal hover:bg-signal/5 rounded-lg transition-all"
-                            title="View loads"
+                            onClick={() => handleStatusClick(inv)}
+                            className={`inline-flex flex-col items-center px-2.5 py-1 rounded text-[10px] font-bold transition-colors cursor-pointer ${
+                              inv.status === 'paid'
+                                ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-900/40 hover:bg-emerald-100 dark:hover:bg-emerald-950/50'
+                                : 'bg-red-50 dark:bg-red-950/30 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-900/40 hover:bg-red-100 dark:hover:bg-red-950/50'
+                            }`}
                           >
-                            <Eye size={14} />
+                            <span>{inv.status === 'paid' ? 'Paid' : 'Unpaid'}</span>
+                            {pendingNotes[inv.id] !== undefined && inv.status !== 'paid' && (
+                              <span className="text-[8px] text-amber-600 font-semibold mt-0.5">{formatCurrency(pendingNotes[inv.id])} pending</span>
+                            )}
                           </button>
-                          <button
-                            onClick={() => setPreviewInvoice(inv)}
-                            className="p-1.5 text-steel hover:text-amberline hover:bg-amberline/5 rounded-lg transition-all"
-                            title="Preview invoice"
-                          >
-                            <FileText size={14} />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(inv.id)}
-                            className="p-1.5 text-steel hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                            title="Delete"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                    {expandedInvoice === inv.id && inv.invoice_loads?.length > 0 && (
-                      <tr key={`${inv.id}-detail`}>
-                        <td colSpan={8} className="bg-lane/50 p-4">
-                          <div className="text-[10px] font-bold text-steel uppercase tracking-widest mb-2">Loads for {inv.invoice_number}</div>
-                          <div className="grid gap-2">
-                            {inv.invoice_loads.map((load: any) => (
-                              <div key={load.id} className="flex flex-col sm:flex-row sm:items-center justify-between bg-white rounded-lg border border-steel/10 px-3 py-2 text-xs gap-1">
-                                <span className="font-semibold text-ink">{load.load_number}</span>
-                                <span className="text-steel">{load.broker_name}</span>
-                                <span className="text-steel">{load.origin_city}, {load.origin_state} → {load.destination_city}, {load.destination_state}</span>
-                                <span className="font-bold text-ink">{formatCurrency(Number(load.gross_amount))}</span>
-                              </div>
-                            ))}
+                        </td>
+                        <td className="py-3 px-2 text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              onClick={() => setExpandedInvoice(expandedInvoice === inv.id ? null : inv.id)}
+                              className="p-1.5 text-steel hover:text-signal hover:bg-blue-50 dark:hover:bg-blue-950/30 rounded-lg transition-colors"
+                              title="View loads"
+                            >
+                              <Eye size={14} />
+                            </button>
+                            <button
+                              onClick={() => setPreviewInvoice(inv)}
+                              className="p-1.5 text-steel hover:text-amberline hover:bg-amber-50 dark:hover:bg-amber-950/30 rounded-lg transition-colors"
+                              title="Preview invoice"
+                            >
+                              <FileText size={14} />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(inv.id)}
+                              className="p-1.5 text-steel hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors"
+                              title="Delete"
+                            >
+                              <Trash2 size={14} />
+                            </button>
                           </div>
                         </td>
                       </tr>
-                    )}
-                  </Fragment>
-                ))
-              )}
-            </tbody>
-          </table>
+                      {expandedInvoice === inv.id && inv.invoice_loads?.length > 0 && (
+                        <tr key={`${inv.id}-detail`}>
+                          <td colSpan={8} className="bg-lane dark:bg-gray-800 p-4">
+                            <div className="text-[10px] font-bold text-steel uppercase tracking-widest mb-2">Loads for {inv.invoice_number}</div>
+                            <div className="grid gap-2">
+                              {inv.invoice_loads.map((load: any) => (
+                                <div key={load.id} className="flex flex-col sm:flex-row sm:items-center justify-between bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-xs gap-1">
+                                  <span className="font-semibold text-ink">{load.load_number}</span>
+                                  <span className="text-steel">{load.broker_name}</span>
+                                  <span className="text-steel">{load.origin_city}, {load.origin_state} → {load.destination_city}, {load.destination_state}</span>
+                                  <span className="font-bold text-ink">{formatCurrency(Number(load.gross_amount))}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </Fragment>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
 
-      {/* Invoice Preview Modal */}
+      {/* Invoice Preview Modal — renders the REAL saved InvoiceTemplate */}
       <AnimatePresence>
-        {previewInvoice && (
+        {previewInvoice && (() => {
+          // Reconstruct exactly what was saved at print time
+          // company_snapshot holds CompanySettings (templateId, dispatchPercentage, payment info etc.)
+          // carrier_snapshot holds CarrierSettings (carrierName, mcNumber etc.)
+          const companySnap: CompanySettings = (previewInvoice as any).company_snapshot ?? {};
+          const carrierSnap: CarrierSettings = previewInvoice.carrier_snapshot ?? {};
+
+          // Map snake_case DB loads → camelCase Load[]
+          const loads: Load[] = (previewInvoice.invoice_loads || []).map((l: any) => ({
+            id: l.id,
+            loadNumber: l.load_number ?? '',
+            brokerName: l.broker_name ?? '',
+            pickupDate: l.pickup_date ?? '',
+            grossAmount: Number(l.gross_amount) || 0,
+            originCity: l.origin_city ?? '',
+            originState: l.origin_state ?? '',
+            destinationCity: l.destination_city ?? '',
+            destinationState: l.destination_state ?? '',
+          }));
+
+          return (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+              onClick={() => setPreviewInvoice(null)}
+            >
+              <motion.div
+                initial={{ scale: 0.92, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.92, opacity: 0, y: 20 }}
+                transition={{ type: 'spring', stiffness: 280, damping: 28 }}
+                onClick={e => e.stopPropagation()}
+                className="bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+                style={{ width: '100%', maxWidth: '860px', maxHeight: '92vh' }}
+              >
+                {/* Modal Header */}
+                <div className="flex items-center justify-between px-6 py-3 shrink-0" style={{ background: '#0d1f3c', borderBottom: '1px solid rgba(29,85,176,0.3)' }}>
+                  <div>
+                    <div className="font-bold text-white text-sm">{previewInvoice.invoice_number}</div>
+                    <div className="text-[11px] mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                      {previewInvoice.carrier_name || carrierSnap.carrierName || 'Unknown Carrier'}
+                      {' · '}{new Date(previewInvoice.invoice_date).toLocaleDateString()}
+                      {companySnap.templateId ? ` · ${companySnap.templateId.charAt(0).toUpperCase() + companySnap.templateId.slice(1)} Template` : ''}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => window.print()}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white transition-all hover:opacity-80"
+                      style={{ background: 'rgba(29,85,176,0.4)', border: '1px solid rgba(29,85,176,0.5)' }}
+                    >
+                      <Printer size={13} /> Reprint
+                    </button>
+                    <button
+                      onClick={() => setPreviewInvoice(null)}
+                      className="p-1.5 rounded-lg transition-all hover:bg-white/10"
+                      style={{ color: 'rgba(255,255,255,0.5)' }}
+                    >
+                      <X size={18} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Actual Invoice Template — same as what was printed */}
+                <div className="overflow-y-auto flex-1" style={{ background: '#f1f5f9' }}>
+                  <div className="p-6">
+                    <InvoiceTemplate
+                      loads={loads}
+                      company={companySnap}
+                      carrier={carrierSnap}
+                      invoiceNumber={previewInvoice.invoice_number}
+                      invoiceDate={previewInvoice.invoice_date}
+                      weekLabel={(previewInvoice as any).week_label ?? ''}
+                    />
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          );
+        })()}
+      </AnimatePresence>
+      {/* ── Payment Amount Modal ── */}
+      <AnimatePresence>
+        {payModalId && payModalInvoice && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-            onClick={() => setPreviewInvoice(null)}
+            className="fixed inset-0 z-[999] flex items-center justify-center p-4"
+            style={{ background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)' }}
+            onClick={handlePayCancel}
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              initial={{ opacity: 0, scale: 0.92, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.92, y: 20 }}
+              transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
               onClick={e => e.stopPropagation()}
-              className="bg-white rounded-2xl shadow-2xl overflow-hidden w-full max-w-2xl max-h-[90vh] flex flex-col"
+              className="w-full max-w-md rounded-2xl overflow-hidden shadow-2xl"
+              style={{ background: '#0d1f3c', border: '1px solid rgba(29,85,176,0.35)' }}
             >
-              {/* Modal Header */}
-              <div className="flex items-center justify-between px-6 py-4 bg-ink border-b border-steel/10 shrink-0">
-                <div>
-                  <h3 className="text-white font-bold text-sm">{previewInvoice.invoice_number}</h3>
-                  <p className="text-steel text-xs mt-0.5">
-                    {previewInvoice.carrier_name || (previewInvoice.carrier_snapshot as any)?.carrierName || 'Unknown Carrier'} · {new Date(previewInvoice.invoice_date).toLocaleDateString()}
-                  </p>
+              {/* Header */}
+              <div className="flex items-center justify-between px-6 py-4 border-b" style={{ borderColor: 'rgba(29,85,176,0.25)' }}>
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)' }}>
+                    <DollarSign size={18} style={{ color: '#10b981' }} />
+                  </div>
+                  <div>
+                    <div className="font-bold text-white text-sm">How Much Was Paid?</div>
+                    <div className="text-[11px]" style={{ color: 'rgba(255,255,255,0.4)' }}>Invoice #{payModalInvoice.invoice_number} · {payModalInvoice.carrier_name || 'Carrier'}</div>
+                  </div>
                 </div>
-                <button onClick={() => setPreviewInvoice(null)} className="p-2 text-steel hover:text-white hover:bg-white/10 rounded-xl transition-all">
+                <button onClick={handlePayCancel} className="text-white/40 hover:text-white/80 transition-colors">
                   <X size={18} />
                 </button>
               </div>
 
-              {/* Invoice Content */}
-              <div className="overflow-y-auto flex-1 bg-gray-100 p-6">
-                <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-steel/10" style={{ fontFamily: 'Arial, sans-serif', fontSize: '12px' }}>
-                  {/* Classic invoice layout matching the app's actual invoice */}
-                  {/* Header */}
-                  <div className="bg-slate-800 text-white p-6 flex justify-between items-start">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center">
-                        <Truck size={20} className="text-white" />
-                      </div>
-                      <div>
-                        <div className="font-black text-lg">{(previewInvoice.carrier_snapshot as any)?.companyName || 'Your Company'}</div>
-                        <div className="text-slate-300 text-xs">Dispatch Fee Invoice</div>
-                      </div>
-                    </div>
-                    <div className="text-right text-sm space-y-1">
-                      <div className="text-slate-300">Invoice # <span className="text-white font-bold">{previewInvoice.invoice_number}</span></div>
-                      <div className="text-slate-300">Invoice Date <span className="text-white">{new Date(previewInvoice.invoice_date).toLocaleDateString()}</span></div>
-                    </div>
+              {/* Body */}
+              <div className="px-6 py-5 space-y-4">
+                {/* Invoice fee info */}
+                <div className="flex items-center justify-between px-4 py-3 rounded-xl" style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(29,85,176,0.2)' }}>
+                  <div className="text-xs text-white/50">
+                    Invoice Amount (Dispatch Fee
+                    {payModalInvoice.dispatch_percentage ? ` @ ${payModalInvoice.dispatch_percentage}%` : ''})
                   </div>
-                  <div className="h-1 bg-gradient-to-r from-signal to-transparent" />
+                  <span className="font-bold text-white text-sm">{formatCurrency(Number(payModalInvoice.dispatch_fee))}</span>
+                </div>
 
-                  {/* Body */}
-                  <div className="p-6 space-y-6" style={{ color: '#0f172a' }}>
-                    {/* From / Bill To */}
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="border border-steel/15 rounded-lg p-4">
-                        <div className="text-[9px] font-bold text-steel uppercase tracking-widest mb-2">FROM</div>
-                        <div className="font-bold text-ink">{(previewInvoice.carrier_snapshot as any)?.companyName || 'Your Company'}</div>
-                        <div className="text-steel text-xs">Dispatch Services</div>
-                        {(previewInvoice.carrier_snapshot as any)?.email && <div className="text-steel text-xs">{(previewInvoice.carrier_snapshot as any).email}</div>}
-                      </div>
-                      <div className="border border-steel/15 rounded-lg p-4">
-                        <div className="text-[9px] font-bold text-steel uppercase tracking-widest mb-2">BILL TO</div>
-                        <div className="font-bold text-ink">{previewInvoice.carrier_name || (previewInvoice.carrier_snapshot as any)?.carrierName || 'Carrier'}</div>
-                        {(previewInvoice.carrier_snapshot as any)?.carrierEmail && <div className="text-steel text-xs">{(previewInvoice.carrier_snapshot as any).carrierEmail}</div>}
-                        {(previewInvoice.carrier_snapshot as any)?.mcNumber && <div className="text-steel text-xs">MC: {(previewInvoice.carrier_snapshot as any).mcNumber}</div>}
-                      </div>
-                    </div>
-
-                    {/* Loads Table */}
-                    <div>
-                      <div className="text-xs font-bold text-ink uppercase tracking-wider mb-2">WEEKLY LOAD SUMMARY — {new Date(previewInvoice.invoice_date).toLocaleDateString()}</div>
-                      <table className="w-full text-xs">
-                        <thead>
-                          <tr className="bg-slate-800 text-white">
-                            <th className="text-left p-2">#</th>
-                            <th className="text-left p-2">Load #</th>
-                            <th className="text-left p-2">Broker</th>
-                            <th className="text-left p-2">Route</th>
-                            <th className="text-right p-2">Gross Amount</th>
-                          </tr>
-                        </thead>
-                        <tbody style={{ color: '#0f172a' }}>
-                          {(previewInvoice.invoice_loads || []).map((load: any, idx: number) => (
-                            <tr key={load.id} style={{ backgroundColor: idx % 2 === 0 ? '#f9fafb' : '#ffffff' }}>
-                              <td className="p-2" style={{ color: '#64748b' }}>{idx + 1}</td>
-                              <td className="p-2 font-bold" style={{ color: '#0f172a' }}>{load.load_number || '—'}</td>
-                              <td className="p-2" style={{ color: '#0f172a' }}>{load.broker_name || '—'}</td>
-                              <td className="p-2" style={{ color: '#64748b' }}>
-                                {load.origin_city && load.destination_city
-                                  ? `${load.origin_city}, ${load.origin_state} → ${load.destination_city}, ${load.destination_state}`
-                                  : '—'}
-                              </td>
-                              <td className="p-2 text-right font-bold" style={{ color: '#0f172a' }}>{formatCurrency(Number(load.gross_amount))}</td>
-                            </tr>
-                          ))}
-                          <tr style={{ backgroundColor: '#f1f5f9' }}>
-                            <td colSpan={4} className="p-2 text-right font-bold uppercase text-xs" style={{ color: '#0f172a' }}>Total Weekly Gross</td>
-                            <td className="p-2 text-right font-black" style={{ color: '#0f172a' }}>{formatCurrency(Number(previewInvoice.total_gross_revenue))}</td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-
-                    {/* Invoice Summary */}
-                    <div className="space-y-2">
-                      <div className="text-xs font-bold text-ink uppercase tracking-wider mb-3">INVOICE SUMMARY</div>
-                      <div className="flex justify-between text-sm text-steel">
-                        <span>Total Weekly Gross ({previewInvoice.invoice_loads?.length || 0} Load{previewInvoice.invoice_loads?.length !== 1 ? 's' : ''})</span>
-                        <span>{formatCurrency(Number(previewInvoice.total_gross_revenue))}</span>
-                      </div>
-                      <div className="flex justify-between text-sm text-steel">
-                        <span>Dispatch Fee{(() => { const pct = previewInvoice.dispatch_percentage ?? (Number(previewInvoice.total_gross_revenue) > 0 ? Math.round((Number(previewInvoice.dispatch_fee) / Number(previewInvoice.total_gross_revenue)) * 100) : null); return pct != null ? ` @ ${pct}%` : ''; })()}</span>
-                        <span>{formatCurrency(Number(previewInvoice.dispatch_fee))}</span>
-                      </div>
-                      <div className="flex justify-between items-center bg-slate-800 text-white rounded-lg px-4 py-3 mt-2">
-                        <span className="font-black uppercase">TOTAL DUE</span>
-                        <span className="font-black text-amberline text-lg">{formatCurrency(Number(previewInvoice.dispatch_fee))}</span>
-                      </div>
-                    </div>
-
-                    {/* Payment info */}
-                    {(previewInvoice.carrier_snapshot as any)?.paymentMethod && (
-                      <div className="border border-steel/15 rounded-lg p-4">
-                        <div className="text-[9px] font-bold text-steel uppercase tracking-widest mb-2">PAYMENT OPTIONS</div>
-                        <div className="text-xs text-ink">{(previewInvoice.carrier_snapshot as any).paymentMethod}: <span className="font-bold">{(previewInvoice.carrier_snapshot as any).paymentDetails}</span></div>
-                      </div>
-                    )}
+                <div>
+                  <label className="block text-[10px] font-bold uppercase tracking-widest mb-1.5" style={{ color: 'rgba(255,255,255,0.4)' }}>Amount Received ($)</label>
+                  <div className="relative">
+                    <DollarSign size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'rgba(255,255,255,0.3)' }} />
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      placeholder="Enter amount paid..."
+                      value={payInput}
+                      onChange={e => setPayInput(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && handlePayConfirm()}
+                      autoFocus
+                      className="w-full pl-8 pr-4 py-3 rounded-xl text-sm text-white font-medium focus:outline-none transition-all"
+                      style={{ background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(29,85,176,0.4)' }}
+                    />
                   </div>
                 </div>
+
+                {/* Live feedback */}
+                {(() => {
+                  const paid = parseFloat(payInput) || 0;
+                  const fee = Number(payModalInvoice.dispatch_fee);
+                  if (paid <= 0) return null;
+                  if (paid >= fee) return (
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium" style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.25)', color: '#6ee7b7' }}>
+                      <CheckCircle size={12} />
+                      Full payment — invoice will be marked <strong>Paid</strong>.
+                    </div>
+                  );
+                  return (
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium" style={{ background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)', color: '#fcd34d' }}>
+                      <AlertCircle size={12} />
+                      Partial payment. <strong>{formatCurrency(+(fee - paid).toFixed(2))}</strong> will remain as pending.
+                    </div>
+                  );
+                })()}
+              </div>
+
+              {/* Footer */}
+              <div className="flex items-center gap-3 px-6 pb-5">
+                <button
+                  onClick={handlePayCancel}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all hover:bg-white/10"
+                  style={{ color: 'rgba(255,255,255,0.5)', border: '1px solid rgba(255,255,255,0.1)' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handlePayConfirm}
+                  className="flex-1 py-2.5 rounded-xl text-sm font-bold text-white transition-all hover:opacity-90"
+                  style={{
+                    background: parseFloat(payInput) >= Number(payModalInvoice.dispatch_fee) && parseFloat(payInput) > 0
+                      ? 'linear-gradient(135deg, #059669, #10b981)'
+                      : parseFloat(payInput) > 0
+                      ? 'linear-gradient(135deg, #b45309, #d97706)'
+                      : 'linear-gradient(135deg, #1d55b0, #2563eb)',
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.3)'
+                  }}
+                >
+                  {parseFloat(payInput) >= Number(payModalInvoice.dispatch_fee) && parseFloat(payInput) > 0
+                    ? 'Mark as Paid ✓'
+                    : parseFloat(payInput) > 0
+                    ? 'Save Partial Payment'
+                    : 'Mark as Paid'}
+                </button>
               </div>
             </motion.div>
           </motion.div>

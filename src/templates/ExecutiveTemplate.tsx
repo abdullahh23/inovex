@@ -35,7 +35,6 @@ export function ExecutiveTemplate({
 
   return (
     <div
-      id="invoice-root"
       style={{
         WebkitPrintColorAdjust: 'exact',
         printColorAdjust: 'exact',
@@ -43,7 +42,7 @@ export function ExecutiveTemplate({
         fontSize: '13px',
         color: '#2d3748',
         background: '#ffffff',
-        width: '820px',
+        width: '100%',
         margin: '0 auto',
         padding: '0 0 40px 0',
         boxSizing: 'border-box',

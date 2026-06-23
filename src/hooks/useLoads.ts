@@ -39,27 +39,22 @@ export function useLoads() {
     const saved = rowToLoad(data);
     setLoads(prev => [...prev, saved]);
 
-    // Increment the correct counter based on source type
+    // Increment counter atomically — single UPDATE avoids TOCTOU race condition
+    // when multiple tabs upload simultaneously
     try {
       const counterField = source === 'manual' ? 'manual_loads_used' : 'file_uploads_used';
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select(counterField)
-        .eq('id', user.id)
-        .single();
-      const currentVal = (profile as any)?.[counterField] ?? 0;
-      await supabase
-        .from('profiles')
-        .update({ [counterField]: currentVal + 1 })
-        .eq('id', user.id);
+      await supabase.rpc('increment_profile_counter', {
+        p_user_id: user.id,
+        p_field: counterField,
+      }).throwOnError();
       // Refresh profile so dashboard shows updated remaining count
       await refreshProfile();
-    } catch (e) {
-      console.error('Failed to increment upload counter:', e);
+    } catch {
+      // Counter increment failed — non-fatal, load was already saved
     }
 
     return saved;
-  }, [user]);
+  }, [user, refreshProfile]);
 
   const removeLoad = useCallback(async (id: string) => {
     if (!user) return;
