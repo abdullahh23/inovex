@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, LogOut, ArrowLeft, Menu, X } from 'lucide-react';
-import { LoadToCashLogo } from '../components/LoadToCashLogo';
+import { Truck, LayoutDashboard, Users, LogOut, ArrowLeft, Menu, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -30,7 +29,7 @@ export function AdminLayout() {
     <div className="h-full flex flex-col bg-white border-r border-steel/10 shadow-sm">
       {/* Header */}
       <div className="p-4 border-b border-steel/10 flex items-center gap-3">
-        <LoadToCashLogo height={34} />
+        <img src="/logo.png" alt="LoadToCash" className="h-9 w-auto object-contain" style={{ maxWidth: '110px' }} />
         <div className="flex flex-col">
           <span className="text-sm font-bold text-ink leading-tight">Admin Portal</span>
           <span className="text-[10px] text-steel font-semibold uppercase tracking-wider">Load to Cash</span>
@@ -88,7 +87,9 @@ export function AdminLayout() {
       {/* Mobile Header Bar */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-16 bg-white border-b border-steel/10 px-4 flex items-center justify-between z-30 no-print">
         <div className="flex items-center gap-2">
-          <LoadToCashLogo iconOnly height={32} />
+          <div className="w-8 h-8 bg-ink rounded-lg flex items-center justify-center">
+            <Truck size={16} className="text-white" />
+          </div>
           <span className="font-bold text-sm text-ink uppercase tracking-wider">Admin Panel</span>
         </div>
         <button

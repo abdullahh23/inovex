@@ -10,7 +10,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { DataProvider, useAppLoads } from '../contexts/DataContext';
 import { PrivacyModal } from '../components/PrivacyModal';
 import { OnboardingTour } from '../components/OnboardingTour';
-import { LoadToCashLogo } from '../components/LoadToCashLogo';
 
 function UserLayoutInner() {
   const { signOut, profile, isAdmin } = useAuth();
@@ -79,9 +78,9 @@ function UserLayoutInner() {
       >
         <div className="flex items-center gap-3 overflow-hidden min-w-0">
           {collapsed ? (
-            <LoadToCashLogo iconOnly height={36} />
+            <img src="/logo.png" alt="LoadToCash" className="w-9 h-9 rounded-lg object-contain shrink-0" />
           ) : (
-            <LoadToCashLogo height={40} />
+            <img src="/logo.png" alt="LoadToCash" className="h-10 w-auto object-contain shrink-0" style={{ maxWidth: '140px' }} />
           )}
         </div>
 
