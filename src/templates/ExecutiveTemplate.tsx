@@ -67,7 +67,7 @@ export function ExecutiveTemplate({
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontSize: '12px', color: '#a0aec0' }}>INVOICE NUMBER</div>
-          <div style={{ fontSize: '20px', fontWeight: '700', color: '#ffffff', fontFamily: 'monospace' }}>{invoiceNumber}</div>
+          <div style={{ fontSize: '20px', fontWeight: '700', color: '#ffffff', fontFamily: 'monospace', whiteSpace: 'nowrap' }}>{invoiceNumber}</div>
         </div>
       </div>
 

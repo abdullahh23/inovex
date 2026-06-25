@@ -74,7 +74,7 @@ export function TechTemplate({
             <tbody>
               <tr>
                 <td style={{ color: '#64748b', paddingBottom: '6px' }}>Invoice</td>
-                <td style={{ textAlign: 'right', fontWeight: '700', color: '#0f172a', paddingBottom: '6px' }}>{invoiceNumber}</td>
+                <td style={{ textAlign: 'right', fontWeight: '700', color: '#0f172a', paddingBottom: '6px', whiteSpace: 'nowrap' }}>{invoiceNumber}</td>
               </tr>
               <tr>
                 <td style={{ color: '#64748b', paddingBottom: '6px' }}>Issued</td>

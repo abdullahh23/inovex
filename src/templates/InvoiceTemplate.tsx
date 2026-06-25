@@ -84,7 +84,7 @@ function ClassicTemplate({
           <tbody>
             <tr>
               <td style={{ color: GRAY_LABEL, paddingRight: '20px', paddingBottom: '4px', whiteSpace: 'nowrap' }}>Invoice #</td>
-              <td style={{ fontWeight: '700', color: NAVY, paddingBottom: '4px', textAlign: 'right' }}>{invoiceNumber}</td>
+              <td style={{ fontWeight: '700', color: NAVY, paddingBottom: '4px', textAlign: 'right', whiteSpace: 'nowrap' }}>{invoiceNumber}</td>
             </tr>
             <tr>
               <td style={{ color: GRAY_LABEL, paddingRight: '20px', paddingBottom: '4px' }}>Invoice Date</td>

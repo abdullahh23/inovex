@@ -65,7 +65,7 @@ export function MinimalTemplate({
           </div>
         </div>
         <div style={{ fontFamily: 'monospace', fontSize: '13px', textAlign: 'right' }}>
-          <div>INV: {invoiceNumber}</div>
+          <div style={{ whiteSpace: 'nowrap' }}>INV: {invoiceNumber}</div>
           <div style={{ color: '#666', marginTop: '2px' }}>Date: {formatDate(invoiceDate)}</div>
           <div style={{ color: '#666', marginTop: '2px' }}>Due: {formatDate(dueDate || invoiceDate)}</div>
         </div>

@@ -149,6 +149,14 @@ export async function downloadInvoicePDF(invoiceNumber: string) {
 
   const imgData = canvas.toDataURL('image/png');
   const pdf = new jsPDF('p', 'mm', 'a4');
+
+  // Set PDF internal title — Chrome's PDF viewer shows this as the file title on mobile
+  pdf.setProperties({
+    title: invoiceNumber,
+    subject: 'Dispatch Fee Invoice',
+    creator: 'LoadToCash',
+  });
+
   const pageW = pdf.internal.pageSize.getWidth();
   const pageH = pdf.internal.pageSize.getHeight();
   const margin = 10;
@@ -177,5 +185,21 @@ export async function downloadInvoicePDF(invoiceNumber: string) {
     }
   }
 
-  pdf.save(`Invoice-${invoiceNumber}.pdf`);
+  // Filename = invoice number only (e.g. "INV-20260625-868.pdf")
+  const filename = `${invoiceNumber}.pdf`;
+
+  // Use blob + anchor click for reliable download on mobile Chrome/Safari
+  // pdf.save() can lose the filename on mobile by opening in a new tab
+  const blob = pdf.output('blob');
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  // Clean up
+  setTimeout(() => {
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  }, 200);
 }
