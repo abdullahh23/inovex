@@ -30,12 +30,11 @@ export function AuthLayout({ title, subtitle, children }: { title: string; subti
         {/* Content */}
         <div className="relative z-10 flex flex-col h-full p-12">
 
-          {/* Logo */}
           <div className="flex items-center">
             <img
               src="/logo.png"
               alt="LoadToCash"
-              style={{ height: '48px', width: 'auto', mixBlendMode: 'screen', objectFit: 'contain' }}
+              style={{ height: '48px', width: 'auto', objectFit: 'contain' }}
             />
           </div>
 

@@ -29,7 +29,7 @@ export function AdminLayout() {
     <div className="h-full flex flex-col bg-white border-r border-steel/10 shadow-sm">
       {/* Header */}
       <div className="p-4 border-b border-steel/10 flex items-center gap-3">
-        <img src="/logo.png" alt="LoadToCash" className="h-9 w-auto object-contain" style={{ maxWidth: '110px', mixBlendMode: 'multiply' }} />
+        <img src="/logo.png" alt="LoadToCash" className="h-9 w-auto object-contain" style={{ maxWidth: '110px' }} />
         <div className="flex flex-col">
           <span className="text-sm font-bold text-ink leading-tight">Admin Portal</span>
           <span className="text-[10px] text-steel font-semibold uppercase tracking-wider">Load to Cash</span>

@@ -150,7 +150,7 @@ export function LandingPage() {
               <img
                 src="/logo.png"
                 alt="LoadToCash"
-                style={{ height: '44px', width: 'auto', mixBlendMode: 'screen', objectFit: 'contain' }}
+                style={{ height: '44px', width: 'auto', objectFit: 'contain' }}
               />
             </Link>
 
@@ -623,8 +623,8 @@ export function LandingPage() {
               {
                 icon: Phone,
                 label: 'Phone',
-                value: '+1 (800) 555-0192',
-                sub: 'Mon–Fri, 8am–6pm CST',
+                value: '+1 (602) 345-1572',
+                sub: 'WhatsApp · Mon–Fri, 8am–6pm CST',
                 color: '#5b9df9',
                 bg: 'rgba(29,85,176,0.12)',
                 border: 'rgba(29,85,176,0.25)',
@@ -632,7 +632,7 @@ export function LandingPage() {
               {
                 icon: Mail,
                 label: 'Email',
-                value: 'support@loadtocash.com',
+                value: 'info@loadtocash.online',
                 sub: 'We reply within 2 hours',
                 color: '#a78bfa',
                 bg: 'rgba(99,102,241,0.10)',
@@ -641,8 +641,8 @@ export function LandingPage() {
               {
                 icon: MapPin,
                 label: 'Office',
-                value: 'Dallas, TX 75201',
-                sub: 'United States',
+                value: '(602) 345-1528',
+                sub: 'Office Line · Mon–Fri',
                 color: '#34d399',
                 bg: 'rgba(16,185,129,0.10)',
                 border: 'rgba(16,185,129,0.25)',
@@ -690,7 +690,7 @@ export function LandingPage() {
               <img
                 src="/logo.png"
                 alt="LoadToCash"
-                style={{ height: '40px', width: 'auto', mixBlendMode: 'screen', objectFit: 'contain' }}
+                style={{ height: '40px', width: 'auto', objectFit: 'contain' }}
               />
             </div>
             <div className="flex flex-wrap items-center justify-center gap-6">

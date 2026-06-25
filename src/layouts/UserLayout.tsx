@@ -77,20 +77,18 @@ function UserLayoutInner() {
         style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}
       >
         <div className="flex items-center gap-3 overflow-hidden min-w-0">
-          {/* Logo image — mix-blend-mode:screen removes white bg on dark sidebar */}
           {collapsed ? (
             <img
               src="/logo.png"
               alt="LoadToCash"
               className="w-9 h-9 rounded-lg object-contain shrink-0"
-              style={{ mixBlendMode: 'screen' }}
             />
           ) : (
             <img
               src="/logo.png"
               alt="LoadToCash"
               className="h-10 w-auto object-contain shrink-0"
-              style={{ maxWidth: '140px', mixBlendMode: 'screen' }}
+              style={{ maxWidth: '140px' }}
             />
           )}
         </div>
