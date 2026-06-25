@@ -1,7 +1,8 @@
 import { Link } from 'react-router-dom';
-import { Truck, Shield, Zap, BarChart3, FileText, CheckCircle } from 'lucide-react';
+import { Shield, Zap, BarChart3, FileText, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import type { ReactNode } from 'react';
+import { LoadToCashLogo } from '../LoadToCashLogo';
 
 export function AuthLayout({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) {
   return (
@@ -31,11 +32,7 @@ export function AuthLayout({ title, subtitle, children }: { title: string; subti
         <div className="relative z-10 flex flex-col h-full p-12">
 
           <div className="flex items-center">
-            <img
-              src="/logo.png"
-              alt="LoadToCash"
-              style={{ height: '48px', width: 'auto', objectFit: 'contain' }}
-            />
+            <LoadToCashLogo height={46} />
           </div>
 
           {/* Main content — centered vertically */}
@@ -151,11 +148,7 @@ export function AuthLayout({ title, subtitle, children }: { title: string; subti
         >
           {/* Logo on mobile only */}
           <div className="lg:hidden flex items-center gap-2 mb-6">
-            <img
-              src="/logo.png"
-              alt="LoadToCash"
-              style={{ height: '36px', width: 'auto', objectFit: 'contain' }}
-            />
+            <LoadToCashLogo height={34} />
           </div>
 
           <h2 className="text-2xl font-bold text-gray-900 tracking-tight">{title}</h2>

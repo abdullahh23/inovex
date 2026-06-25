@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { LoadToCashLogo } from '../components/LoadToCashLogo';
 import { motion, useInView, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import {
   Truck, ArrowRight, UploadCloud, Cpu, CheckSquare, FileSpreadsheet,
@@ -146,12 +147,8 @@ export function LandingPage() {
           <div className="flex items-center justify-between h-18 py-4">
 
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2 group">
-              <img
-                src="/logo.png"
-                alt="LoadToCash"
-                style={{ height: '44px', width: 'auto', objectFit: 'contain' }}
-              />
+            <Link to="/" className="flex items-center group">
+              <LoadToCashLogo height={42} />
             </Link>
 
             {/* Desktop nav */}
@@ -687,11 +684,7 @@ export function LandingPage() {
         <div className="max-w-5xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-6">
             <div className="flex items-center">
-              <img
-                src="/logo.png"
-                alt="LoadToCash"
-                style={{ height: '40px', width: 'auto', objectFit: 'contain' }}
-              />
+              <LoadToCashLogo height={36} />
             </div>
             <div className="flex flex-wrap items-center justify-center gap-6">
               <button onClick={() => scrollTo('features')} className="text-xs text-white/30 hover:text-white/60 transition-colors">Features</button>
