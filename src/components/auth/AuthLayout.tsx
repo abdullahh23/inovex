@@ -31,15 +31,12 @@ export function AuthLayout({ title, subtitle, children }: { title: string; subti
         <div className="relative z-10 flex flex-col h-full p-12">
 
           {/* Logo */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg"
-              style={{ background: 'linear-gradient(135deg, #1d55b0, #2d6fd4)', boxShadow: '0 4px 20px rgba(29,85,176,0.5)' }}>
-              <Truck size={20} className="text-white" />
-            </div>
-            <div>
-              <span className="text-base font-bold text-white tracking-tight">Load to Cash</span>
-              <div className="text-[9px] text-white/35 font-medium uppercase tracking-wider">Dispatch System</div>
-            </div>
+          <div className="flex items-center">
+            <img
+              src="/logo.png"
+              alt="LoadToCash"
+              style={{ height: '48px', width: 'auto', mixBlendMode: 'screen', objectFit: 'contain' }}
+            />
           </div>
 
           {/* Main content — centered vertically */}
@@ -155,11 +152,11 @@ export function AuthLayout({ title, subtitle, children }: { title: string; subti
         >
           {/* Logo on mobile only */}
           <div className="lg:hidden flex items-center gap-2 mb-6">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-              style={{ background: 'linear-gradient(135deg, #1d55b0, #2563eb)' }}>
-              <Truck size={16} className="text-white" />
-            </div>
-            <span className="font-bold text-sm text-gray-900 tracking-tight">Load to Cash</span>
+            <img
+              src="/logo.png"
+              alt="LoadToCash"
+              style={{ height: '36px', width: 'auto', objectFit: 'contain' }}
+            />
           </div>
 
           <h2 className="text-2xl font-bold text-gray-900 tracking-tight">{title}</h2>

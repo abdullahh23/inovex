@@ -146,15 +146,12 @@ export function LandingPage() {
           <div className="flex items-center justify-between h-18 py-4">
 
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-3 group">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center shadow-lg"
-                style={{ background: 'linear-gradient(135deg, #1d55b0, #2d6fd4)' }}>
-                <Truck size={18} className="text-white" />
-              </div>
-              <div>
-                <span className="font-bold text-white text-base tracking-tight">Load to Cash</span>
-                <div className="text-[9px] text-white/40 font-medium uppercase tracking-wider -mt-0.5">Dispatch System</div>
-              </div>
+            <Link to="/" className="flex items-center gap-2 group">
+              <img
+                src="/logo.png"
+                alt="LoadToCash"
+                style={{ height: '44px', width: 'auto', mixBlendMode: 'screen', objectFit: 'contain' }}
+              />
             </Link>
 
             {/* Desktop nav */}
@@ -689,15 +686,12 @@ export function LandingPage() {
       <footer className="relative z-10 px-6 py-10" style={{ borderTop: '1px solid rgba(29,85,176,0.15)' }}>
         <div className="max-w-5xl mx-auto">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6 mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center"
-                style={{ background: 'linear-gradient(135deg, #1d55b0, #2d6fd4)' }}>
-                <Truck size={15} className="text-white" />
-              </div>
-              <div>
-                <span className="text-sm font-bold text-white/70">Load to Cash</span>
-                <div className="text-[9px] text-white/25 font-medium uppercase tracking-wider">Dispatch Automation Platform</div>
-              </div>
+            <div className="flex items-center">
+              <img
+                src="/logo.png"
+                alt="LoadToCash"
+                style={{ height: '40px', width: 'auto', mixBlendMode: 'screen', objectFit: 'contain' }}
+              />
             </div>
             <div className="flex flex-wrap items-center justify-center gap-6">
               <button onClick={() => scrollTo('features')} className="text-xs text-white/30 hover:text-white/60 transition-colors">Features</button>
